@@ -21,6 +21,9 @@ if errorlevel 1 exit /b %errorlevel%
 copy /Y licenses\Apache-2.0.txt dist\Kanyx\licenses\Apache-2.0.txt >nul
 if errorlevel 1 exit /b %errorlevel%
 
+python scripts\prepare_runtime_notices.py dist\Kanyx
+if errorlevel 1 exit /b %errorlevel%
+
 python -m pip freeze > dist\Kanyx\BUILD_DEPENDENCIES.txt
 if errorlevel 1 exit /b %errorlevel%
 python scripts\audit_release_bundle.py dist\Kanyx --report dist\Kanyx\BUNDLE_AUDIT.json

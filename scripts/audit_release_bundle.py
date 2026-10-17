@@ -18,6 +18,7 @@ REQUIRED = {
     "licenses/LGPL-3.0.txt",
     "licenses/GPL-3.0.txt",
     "licenses/Apache-2.0.txt",
+    "licenses/Python-3.12-LICENSE.txt",
 }
 
 # Known GPL-only Qt modules (under the Qt community/open-source distribution).
