@@ -1,0 +1,24 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# User data
+data/
+*.db
+*.db-wal
+*.db-shm
+
+# Build outputs
+build/
+dist/
+*.spec
+
+# Editors
+.vscode/
+.idea/
+
+# System
+.DS_Store
+Thumbs.db
