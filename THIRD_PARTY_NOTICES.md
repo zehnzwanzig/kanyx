@@ -27,6 +27,12 @@ PyInstaller includes Python runtime and standard-library code in frozen applicat
 - Python license FAQ: https://wiki.python.org/moin/PythonSoftwareFoundationLicenseFaq
 - Python licensing: https://docs.python.org/3/license.html
 
+Release packages include `licenses/Python-3.12-LICENSE.txt`, copied from a
+version-matched official CPython source tag and verified against a pinned Git
+blob digest, and `RUNTIME_COMPONENTS.json` containing a native-binary inventory.
+These are supporting evidence, not a complete third-party license audit. See
+`docs/RUNTIME_THIRD_PARTY_REVIEW.md` in the repository for open items.
+
 ## PyInstaller
 
 PyInstaller is licensed under GPL-2.0-or-later with a bootloader exception allowing the distribution of generated executables under the application license, subject to dependency licensing requirements. Using PyInstaller does not automatically make Kanyx GPL-licensed.
