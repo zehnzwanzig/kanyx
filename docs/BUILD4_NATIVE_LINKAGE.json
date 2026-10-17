@@ -1,0 +1,335 @@
+{
+  "schema_version": 1,
+  "status": "EVIDENCE_ONLY_NO_LEGAL_CLEARANCE",
+  "windows": {
+    "platform": "Windows",
+    "artifact": "Kanyx-Windows-candidate-build4.zip",
+    "artifact_sha256": "0a8b731f3d7220144d84a49dfcedaabecfc6221b44e1a50b1a0c4f0c63caf45b",
+    "libraries": [
+      {
+        "path": "_internal/_hashlib.pyd",
+        "size_bytes": 68976,
+        "sha256": "03d233dbace599168eaffec823de6ed7beec8c2a4ebfe9b8a3d8e042a59af3ba",
+        "imported_libraries": [
+          "api-ms-win-crt-runtime-l1-1-0.dll",
+          "api-ms-win-crt-string-l1-1-0.dll",
+          "KERNEL32.dll",
+          "libcrypto-3.dll",
+          "python312.dll",
+          "VCRUNTIME140.dll"
+        ]
+      },
+      {
+        "path": "_internal/PySide6/plugins/tls/qopensslbackend.dll",
+        "size_bytes": 317752,
+        "sha256": "94b3492bc4087da2818e2749a5a03f7d810611b2e3648bd8d580ad087363046f",
+        "imported_libraries": [
+          "api-ms-win-crt-heap-l1-1-0.dll",
+          "api-ms-win-crt-runtime-l1-1-0.dll",
+          "api-ms-win-crt-string-l1-1-0.dll",
+          "CRYPT32.dll",
+          "KERNEL32.dll",
+          "MSVCP140.dll",
+          "Qt6Core.dll",
+          "Qt6Network.dll",
+          "VCRUNTIME140.dll"
+        ]
+      },
+      {
+        "path": "_internal/PySide6/Qt6Network.dll",
+        "size_bytes": 1780536,
+        "sha256": "1c7c393b264ae78f4dee211656377a086c4be714bf768d3135f94f11c1d0be61",
+        "imported_libraries": [
+          "ADVAPI32.dll",
+          "api-ms-win-crt-heap-l1-1-0.dll",
+          "api-ms-win-crt-math-l1-1-0.dll",
+          "api-ms-win-crt-runtime-l1-1-0.dll",
+          "api-ms-win-crt-stdio-l1-1-0.dll",
+          "api-ms-win-crt-string-l1-1-0.dll",
+          "DNSAPI.dll",
+          "IPHLPAPI.DLL",
+          "KERNEL32.dll",
+          "MSVCP140.dll",
+          "MSVCP140_1.dll",
+          "Qt6Core.dll",
+          "Secur32.dll",
+          "VCRUNTIME140.dll",
+          "VCRUNTIME140_1.dll",
+          "WINHTTP.dll",
+          "WS2_32.dll"
+        ]
+      },
+      {
+        "path": "_internal/libcrypto-3.dll",
+        "size_bytes": 5231472,
+        "sha256": "ccfffddcd3defb8d899026298af9af43bc186130f8483d77e97c93233d5f27d7",
+        "imported_libraries": [
+          "ADVAPI32.dll",
+          "api-ms-win-crt-convert-l1-1-0.dll",
+          "api-ms-win-crt-environment-l1-1-0.dll",
+          "api-ms-win-crt-filesystem-l1-1-0.dll",
+          "api-ms-win-crt-heap-l1-1-0.dll",
+          "api-ms-win-crt-runtime-l1-1-0.dll",
+          "api-ms-win-crt-stdio-l1-1-0.dll",
+          "api-ms-win-crt-string-l1-1-0.dll",
+          "api-ms-win-crt-time-l1-1-0.dll",
+          "api-ms-win-crt-utility-l1-1-0.dll",
+          "bcrypt.dll",
+          "KERNEL32.dll",
+          "USER32.dll",
+          "VCRUNTIME140.dll",
+          "WS2_32.dll"
+        ]
+      },
+      {
+        "path": "_internal/libcrypto-3-x64.dll",
+        "size_bytes": 7144080,
+        "sha256": "cc15784f3aea86a526fa3d74e1fe1df94293e96d0888fbaacf4ed9f8e24ea2e0",
+        "imported_libraries": [
+          "ADVAPI32.dll",
+          "api-ms-win-crt-convert-l1-1-0.dll",
+          "api-ms-win-crt-environment-l1-1-0.dll",
+          "api-ms-win-crt-filesystem-l1-1-0.dll",
+          "api-ms-win-crt-heap-l1-1-0.dll",
+          "api-ms-win-crt-runtime-l1-1-0.dll",
+          "api-ms-win-crt-stdio-l1-1-0.dll",
+          "api-ms-win-crt-string-l1-1-0.dll",
+          "api-ms-win-crt-time-l1-1-0.dll",
+          "api-ms-win-crt-utility-l1-1-0.dll",
+          "CRYPT32.dll",
+          "KERNEL32.dll",
+          "USER32.dll",
+          "VCRUNTIME140.dll",
+          "WS2_32.dll"
+        ]
+      },
+      {
+        "path": "_internal/libssl-3-x64.dll",
+        "size_bytes": 1314952,
+        "sha256": "6de9ca3242fb130ee489f22cdef58f48b458afdc9636ca9c9c6ed57a921408d9",
+        "imported_libraries": [
+          "api-ms-win-crt-convert-l1-1-0.dll",
+          "api-ms-win-crt-environment-l1-1-0.dll",
+          "api-ms-win-crt-filesystem-l1-1-0.dll",
+          "api-ms-win-crt-heap-l1-1-0.dll",
+          "api-ms-win-crt-runtime-l1-1-0.dll",
+          "api-ms-win-crt-string-l1-1-0.dll",
+          "api-ms-win-crt-time-l1-1-0.dll",
+          "api-ms-win-crt-utility-l1-1-0.dll",
+          "KERNEL32.dll",
+          "libcrypto-3-x64.dll",
+          "VCRUNTIME140.dll",
+          "WS2_32.dll"
+        ]
+      }
+    ],
+    "note": "Static import tables omit libraries loaded at runtime.",
+    "packaged_microsoft_runtime_files": [
+      "_internal/PySide6/MSVCP140.dll",
+      "_internal/PySide6/MSVCP140_1.dll",
+      "_internal/PySide6/MSVCP140_2.dll",
+      "_internal/PySide6/VCRUNTIME140.dll",
+      "_internal/PySide6/VCRUNTIME140_1.dll",
+      "_internal/VCRUNTIME140.dll",
+      "_internal/VCRUNTIME140_1.dll",
+      "_internal/api-ms-win-core-console-l1-1-0.dll",
+      "_internal/api-ms-win-core-datetime-l1-1-0.dll",
+      "_internal/api-ms-win-core-debug-l1-1-0.dll",
+      "_internal/api-ms-win-core-errorhandling-l1-1-0.dll",
+      "_internal/api-ms-win-core-fibers-l1-1-0.dll",
+      "_internal/api-ms-win-core-fibers-l1-1-1.dll",
+      "_internal/api-ms-win-core-file-l1-1-0.dll",
+      "_internal/api-ms-win-core-file-l1-2-0.dll",
+      "_internal/api-ms-win-core-file-l2-1-0.dll",
+      "_internal/api-ms-win-core-handle-l1-1-0.dll",
+      "_internal/api-ms-win-core-heap-l1-1-0.dll",
+      "_internal/api-ms-win-core-interlocked-l1-1-0.dll",
+      "_internal/api-ms-win-core-kernel32-legacy-l1-1-1.dll",
+      "_internal/api-ms-win-core-libraryloader-l1-1-0.dll",
+      "_internal/api-ms-win-core-localization-l1-2-0.dll",
+      "_internal/api-ms-win-core-memory-l1-1-0.dll",
+      "_internal/api-ms-win-core-namedpipe-l1-1-0.dll",
+      "_internal/api-ms-win-core-processenvironment-l1-1-0.dll",
+      "_internal/api-ms-win-core-processthreads-l1-1-0.dll",
+      "_internal/api-ms-win-core-processthreads-l1-1-1.dll",
+      "_internal/api-ms-win-core-profile-l1-1-0.dll",
+      "_internal/api-ms-win-core-rtlsupport-l1-1-0.dll",
+      "_internal/api-ms-win-core-string-l1-1-0.dll",
+      "_internal/api-ms-win-core-synch-l1-1-0.dll",
+      "_internal/api-ms-win-core-synch-l1-2-0.dll",
+      "_internal/api-ms-win-core-sysinfo-l1-1-0.dll",
+      "_internal/api-ms-win-core-sysinfo-l1-2-0.dll",
+      "_internal/api-ms-win-core-timezone-l1-1-0.dll",
+      "_internal/api-ms-win-core-util-l1-1-0.dll",
+      "_internal/api-ms-win-crt-conio-l1-1-0.dll",
+      "_internal/api-ms-win-crt-convert-l1-1-0.dll",
+      "_internal/api-ms-win-crt-environment-l1-1-0.dll",
+      "_internal/api-ms-win-crt-filesystem-l1-1-0.dll",
+      "_internal/api-ms-win-crt-heap-l1-1-0.dll",
+      "_internal/api-ms-win-crt-locale-l1-1-0.dll",
+      "_internal/api-ms-win-crt-math-l1-1-0.dll",
+      "_internal/api-ms-win-crt-process-l1-1-0.dll",
+      "_internal/api-ms-win-crt-runtime-l1-1-0.dll",
+      "_internal/api-ms-win-crt-stdio-l1-1-0.dll",
+      "_internal/api-ms-win-crt-string-l1-1-0.dll",
+      "_internal/api-ms-win-crt-time-l1-1-0.dll",
+      "_internal/api-ms-win-crt-utility-l1-1-0.dll",
+      "_internal/shiboken6/MSVCP140.dll",
+      "_internal/shiboken6/VCRUNTIME140.dll",
+      "_internal/shiboken6/VCRUNTIME140_1.dll",
+      "_internal/ucrtbase.dll"
+    ],
+    "important_note": "Visual C++ Redistributable licensing and allowed distribution must be verified from Microsoft terms and upstream wheel provenance."
+  },
+  "linux": {
+    "platform": "Linux",
+    "artifact": "Kanyx-Linux-candidate-build4.zip",
+    "artifact_sha256": "2cf2f4c59852eabc7a4de349061723b25f516da77d7975d2c8c8436dfc4ea66a",
+    "libraries": [
+      {
+        "path": "_internal/PySide6/Qt/plugins/platforms/libqxcb.so",
+        "size_bytes": 19000,
+        "sha256": "8611ee4e2315bcf4b38e14e2714b553e227e489a5cfaaa40b692fff9f2ac272a",
+        "imported_libraries": [
+          "libc.so.6",
+          "libgcc_s.so.1",
+          "libGL.so.1",
+          "libm.so.6",
+          "libQt6Core.so.6",
+          "libQt6Gui.so.6",
+          "libQt6XcbQpa.so.6",
+          "libstdc++.so.6",
+          "libX11-xcb.so.1",
+          "libX11.so.6",
+          "libxcb-cursor.so.0",
+          "libxcb-icccm.so.4",
+          "libxcb-image.so.0",
+          "libxcb-keysyms.so.1",
+          "libxcb-randr.so.0",
+          "libxcb-render-util.so.0",
+          "libxcb-render.so.0",
+          "libxcb-shape.so.0",
+          "libxcb-shm.so.0",
+          "libxcb-sync.so.1",
+          "libxcb-util.so.1",
+          "libxcb-xfixes.so.0",
+          "libxcb-xkb.so.1",
+          "libxcb.so.1",
+          "libxkbcommon-x11.so.0",
+          "libxkbcommon.so.0"
+        ]
+      },
+      {
+        "path": "_internal/PySide6/Qt/lib/libQt6XcbQpa.so.6",
+        "size_bytes": 779720,
+        "sha256": "fe274149676867bb59884a3bb0aa5ae6b2365a92f1e7449ea12a4dc267a53fa3",
+        "imported_libraries": [
+          "libc.so.6",
+          "libgcc_s.so.1",
+          "libGL.so.1",
+          "libglib-2.0.so.0",
+          "libgthread-2.0.so.0",
+          "libm.so.6",
+          "libQt6Core.so.6",
+          "libQt6Gui.so.6",
+          "libstdc++.so.6",
+          "libX11-xcb.so.1",
+          "libX11.so.6",
+          "libxcb-cursor.so.0",
+          "libxcb-icccm.so.4",
+          "libxcb-image.so.0",
+          "libxcb-keysyms.so.1",
+          "libxcb-randr.so.0",
+          "libxcb-render-util.so.0",
+          "libxcb-render.so.0",
+          "libxcb-shape.so.0",
+          "libxcb-shm.so.0",
+          "libxcb-sync.so.1",
+          "libxcb-util.so.1",
+          "libxcb-xfixes.so.0",
+          "libxcb-xkb.so.1",
+          "libxcb.so.1",
+          "libxkbcommon-x11.so.0",
+          "libxkbcommon.so.0"
+        ]
+      },
+      {
+        "path": "_internal/PySide6/Qt/plugins/tls/libqopensslbackend.so",
+        "size_bytes": 363104,
+        "sha256": "d6f153ea607720b1ea08fb66d224be3c012d5023cee983a22735ae11c03709d2",
+        "imported_libraries": [
+          "libc.so.6",
+          "libgcc_s.so.1",
+          "libm.so.6",
+          "libQt6Core.so.6",
+          "libQt6Network.so.6",
+          "libstdc++.so.6"
+        ]
+      },
+      {
+        "path": "_internal/PySide6/Qt/lib/libQt6Network.so.6",
+        "size_bytes": 2153672,
+        "sha256": "973d87ea5fc92dafb82aac307c32b7646cbd6640d06bc3f7d8b6c1771077603f",
+        "imported_libraries": [
+          "libbrotlicommon.so.1",
+          "libbrotlidec.so.1",
+          "libc.so.6",
+          "libgcc_s.so.1",
+          "libgssapi_krb5.so.2",
+          "libm.so.6",
+          "libQt6Core.so.6",
+          "libresolv.so.2",
+          "libstdc++.so.6",
+          "libz.so.1",
+          "libzstd.so.1"
+        ]
+      },
+      {
+        "path": "_internal/libssl.so.3",
+        "size_bytes": 696512,
+        "sha256": "a40e7b67489bbd257e432c700ff8f6a1ad796425b5eccecdc2930127fdd86624",
+        "imported_libraries": [
+          "libc.so.6",
+          "libcrypto.so.3"
+        ]
+      },
+      {
+        "path": "_internal/libcrypto.so.3",
+        "size_bytes": 5309400,
+        "sha256": "6866ed711dab8927e1bf82bf1cd30e828bdfc34f3cc1e83b1c9eb01ce6c37d9a",
+        "imported_libraries": [
+          "libc.so.6"
+        ]
+      },
+      {
+        "path": "_internal/libgssapi_krb5.so.2",
+        "size_bytes": 338696,
+        "sha256": "c7aa00cf51646f7c32f196d329a562bc873ff32906c9caf6554ca489dd657507",
+        "imported_libraries": [
+          "libc.so.6",
+          "libcom_err.so.2",
+          "libk5crypto.so.3",
+          "libkrb5.so.3",
+          "libkrb5support.so.0"
+        ]
+      }
+    ],
+    "note": "Static import tables omit libraries loaded at runtime.",
+    "qpa_imports_not_in_archive": [
+      "libGL.so.1",
+      "libc.so.6",
+      "libm.so.6",
+      "libxcb-cursor.so.0",
+      "libxcb-icccm.so.4",
+      "libxcb-image.so.0",
+      "libxcb-keysyms.so.1",
+      "libxcb-render-util.so.0",
+      "libxcb-shape.so.0",
+      "libxcb-util.so.1",
+      "libxcb-xkb.so.1",
+      "libxcb.so.1",
+      "libxkbcommon-x11.so.0"
+    ],
+    "important_note": "These may exist on the target OS; absence from the archive alone does not establish a runtime failure."
+  }
+}
