@@ -1,0 +1,40 @@
+name: Build release candidates
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build portable Windows folder
+        shell: cmd
+        run: scripts\build_windows_release.bat
+      - name: Upload Windows candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: Kanyx-Windows-candidate
+          path: dist/Kanyx/
+          if-no-files-found: error
+  linux:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build portable Linux folder
+        run: bash scripts/build_linux_release.sh
+      - name: Upload Linux candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: Kanyx-Linux-candidate
+          path: dist/Kanyx-linux/
+          if-no-files-found: error
