@@ -1,0 +1,27 @@
+name: Prepare Qt source archives
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sources:
+    name: Fetch and verify Qt 6.12.0 sources
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - name: Download Qt sources and verify upstream SHA-256
+        run: python scripts/prepare_qt_sources.py --output dist/Kanyx-Qt-sources-6.12.0
+      - name: Upload source bundle for manual review
+        uses: actions/upload-artifact@v7
+        with:
+          name: Kanyx-Qt-sources-6.12.0
+          path: dist/Kanyx-Qt-sources-6.12.0/
+          if-no-files-found: error
+          retention-days: 30
