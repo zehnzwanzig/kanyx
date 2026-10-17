@@ -1,0 +1,39 @@
+{
+  "bundle": "/mnt/data/Kanyx-Windows-candidate.zip",
+  "files": 218,
+  "qt_binaries": [
+    "_internal/PySide6/Qt6Core.dll",
+    "_internal/PySide6/Qt6Gui.dll",
+    "_internal/PySide6/Qt6Network.dll",
+    "_internal/PySide6/Qt6OpenGL.dll",
+    "_internal/PySide6/Qt6Pdf.dll",
+    "_internal/PySide6/Qt6Qml.dll",
+    "_internal/PySide6/Qt6QmlMeta.dll",
+    "_internal/PySide6/Qt6QmlModels.dll",
+    "_internal/PySide6/Qt6QmlWorkerScript.dll",
+    "_internal/PySide6/Qt6Quick.dll",
+    "_internal/PySide6/Qt6Svg.dll",
+    "_internal/PySide6/Qt6VirtualKeyboard.dll",
+    "_internal/PySide6/Qt6Widgets.dll",
+    "_internal/shiboken6/MSVCP140.dll",
+    "_internal/shiboken6/Shiboken.pyd",
+    "_internal/shiboken6/VCRUNTIME140.dll",
+    "_internal/shiboken6/VCRUNTIME140_1.dll",
+    "_internal/shiboken6/shiboken6.abi3.dll"
+  ],
+  "gpl_only_risks": [
+    "_internal/PySide6/Qt6VirtualKeyboard.dll",
+    "_internal/PySide6/plugins/platforminputcontexts/qtvirtualkeyboardplugin.dll"
+  ],
+  "missing_notices": [],
+  "openssl_binaries": [
+    "_internal/libcrypto-3-x64.dll",
+    "_internal/libcrypto-3.dll",
+    "_internal/libssl-3-x64.dll"
+  ],
+  "qt_pdf_binaries": [
+    "_internal/PySide6/Qt6Pdf.dll"
+  ],
+  "result": "BLOCK",
+  "note": "PRELIMINARY_PASS does not certify LGPL/GPL/third-party compliance. Manual review, replaceability and corresponding source obligations remain."
+}

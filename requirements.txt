@@ -1,2 +1,4 @@
-PySide6>=6.8,<7
-pyinstaller>=6.11,<7
+# Kanyx release dependencies: intentionally use Essentials, not the PySide6 metapackage.
+# The metapackage adds GPL-only Qt Virtual Keyboard and other unused modules.
+PySide6-Essentials==6.12.0
+pyinstaller==6.22.3
