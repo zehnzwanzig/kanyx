@@ -23,7 +23,16 @@ class TestRuntimeNotices(unittest.TestCase):
                 p.parent.mkdir(parents=True, exist_ok=True)
                 p.write_bytes(b'123')
             got = describe_native_files(root)
-            self.assertEqual([x['group'] for x in got], ['Qt/Qt-plugin', 'OpenSSL', 'CPython/runtime-extension'])
+            # File iteration order differs between Windows and Linux. Check
+            # path-to-category assignments instead of the ordering of items.
+            self.assertEqual(
+                {entry['path']: entry['group'] for entry in got},
+                {
+                    '_internal/PySide6/Qt6Core.dll': 'Qt/Qt-plugin',
+                    '_internal/libssl-3-x64.dll': 'OpenSSL',
+                    '_internal/python312.dll': 'CPython/runtime-extension',
+                },
+            )
 
 
 if __name__ == '__main__':
