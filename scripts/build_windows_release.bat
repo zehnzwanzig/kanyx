@@ -24,6 +24,10 @@ if errorlevel 1 exit /b %errorlevel%
 python scripts\prepare_runtime_notices.py dist\Kanyx
 if errorlevel 1 exit /b %errorlevel%
 
+REM Include source-verified Qt third-party copyright and license notices.
+python scripts\prepare_qt_third_party_notices.py dist\Kanyx
+if errorlevel 1 exit /b %errorlevel%
+
 python -m pip freeze > dist\Kanyx\BUILD_DEPENDENCIES.txt
 if errorlevel 1 exit /b %errorlevel%
 python scripts\audit_release_bundle.py dist\Kanyx --report dist\Kanyx\BUNDLE_AUDIT.json
