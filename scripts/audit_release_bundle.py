@@ -19,6 +19,15 @@ REQUIRED = {
     "licenses/GPL-3.0.txt",
     "licenses/Apache-2.0.txt",
     "licenses/Python-3.12-LICENSE.txt",
+    "THIRD_PARTY_QT_NOTICES.md",
+    "THIRD_PARTY_QT_MANIFEST.json",
+    "licenses/third-party/libtiff-COPYRIGHT.txt",
+    "licenses/third-party/libwebp-COPYING.txt",
+    "licenses/third-party/libjpeg-turbo-LICENSE.txt",
+    "licenses/third-party/libjpeg-IJG-LICENSE.txt",
+    "licenses/third-party/libpng-LICENSE.txt",
+    "licenses/third-party/harfbuzz-COPYING.txt",
+    "licenses/third-party/freetype-FTL.txt",
 }
 
 # Known GPL-only Qt modules (under the Qt community/open-source distribution).
@@ -39,13 +48,12 @@ def scan(path: Path) -> dict:
     else:
         raise ValueError('Expected an extracted onedir folder or a ZIP artifact')
 
-    lower_names = [n.lower() for n in names]
-    present = set(names)
     # Some ZIP producers wrap the payload in an outer folder. Recognize that form.
     missing = sorted(p for p in REQUIRED if not any(n == p or n.endswith('/' + p) for n in names))
     flagged = sorted(n for n in names if
-                     n.lower().endswith(('.dll', '.so', '.dylib', '.pyd'))
-                     or '.so.' in n.lower() if any(s in n.lower() for s in GPL_ONLY_FRAGMENTS))
+                     (n.lower().endswith(('.dll', '.so', '.dylib', '.pyd'))
+                      or '.so.' in n.lower())
+                     and any(s in n.lower() for s in GPL_ONLY_FRAGMENTS))
     qt_binaries = sorted(n for n in names if ('qt6' in n.lower() or 'shiboken6' in n.lower())
                          and (n.lower().endswith(('.dll', '.pyd', '.dylib', '.so')) or '.so.' in n.lower()))
     openssl = sorted(n for n in names if any(s in Path(n).name.lower() for s in ('libcrypto', 'libssl')))
