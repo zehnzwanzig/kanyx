@@ -18,7 +18,26 @@ Under the applicable LGPL provisions, recipients must be able to modify and repl
 
 ## OpenSSL
 
-Builds may bundle OpenSSL 3.x libraries (for example `libssl` and `libcrypto`). OpenSSL 3 and later versions derived from it are distributed under the **Apache License, Version 2.0**. See [`licenses/Apache-2.0.txt`](licenses/Apache-2.0.txt) and https://openssl-library.org/source/license/index.html. Verify the exact OpenSSL version, any included NOTICE files, and the actual libraries before releasing.
+The Kanyx **build #4 release candidates** (GitHub Actions run `39055418349`, 2026-10-17) contain dynamically distributed OpenSSL 3 libraries:
+
+- **Windows:** OpenSSL 3.5.5 (`_internal/libcrypto-3-x64.dll`) and OpenSSL 3.0.16 (`_internal/libcrypto-3.dll`) were identified from embedded version strings. `_internal/libssl-3-x64.dll` and the Qt TLS plugin are also bundled; their exact dependency relationships require additional verification.
+- **Linux:** OpenSSL 3.0.13 (`_internal/libcrypto.so.3`) was identified from embedded version strings. `_internal/libssl.so.3` and the Qt TLS plugin are also bundled.
+
+The embedded strings are evidence of version identifiers, not an independent provenance certification. Future builds must be re-audited.
+
+OpenSSL 3 is licensed under the **Apache License, Version 2.0**. The license text is included as [`licenses/Apache-2.0.txt`](licenses/Apache-2.0.txt) in the portable distributions. OpenSSL Project copyright and licensing remain with their respective owners.
+
+Official upstream licensing references:
+- https://github.com/openssl/openssl/blob/openssl-3.0.13/LICENSE.txt
+- https://github.com/openssl/openssl/blob/openssl-3.0.16/LICENSE.txt
+- https://github.com/openssl/openssl/blob/openssl-3.5.5/LICENSE.txt
+- https://openssl-library.org/source/license/index.html
+
+For the exact binary paths, sizes and SHA-256 hashes, see
+[`docs/OPENSSL_RUNTIME_INVENTORY.md`](docs/OPENSSL_RUNTIME_INVENTORY.md).
+The remaining review must identify the binary origins/build options, linkage,
+relevant third-party attribution, and whether additional notices are required.
+The presence of this section does **not** certify full release compliance.
 
 ## CPython and Python standard-library components
 
@@ -41,7 +60,7 @@ PyInstaller is licensed under GPL-2.0-or-later with a bootloader exception allow
 
 ## Other runtime libraries and Qt dependencies
 
-Qt modules may embed third-party software; for example Qt PDF includes PDFium and multiple additional licenses. Other Qt plugins, the Microsoft C/C++ runtime, SQLite and packaged system libraries should be inventoried and their exact redistributable terms verified. This document is a starting notice, **not a complete inventory or proof of compliance**.
+Qt modules may embed third-party software; for example Qt PDF includes PDFium and multiple additional licenses. Other Qt plugins, the Microsoft C/C++ runtime, SQLite and packaged system libraries should be inventoried and their exact redistributable terms verified. The distribution includes `THIRD_PARTY_QT_NOTICES.md` and license texts under `licenses/third-party/` for seven reviewed Qt third-party dependencies. These are a **partial** inventory, not a complete inventory or proof of compliance.
 
 ## Kanyx icon and artwork
 
