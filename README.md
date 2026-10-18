@@ -8,6 +8,13 @@ Built with **Python, PySide6 (Qt 6) and SQLite**. No accounts, cloud service or 
 >
 > [Download Kanyx](https://github.com/zehnzwanzig/kanyx/releases) · [Report a bug](https://github.com/zehnzwanzig/kanyx/issues/new?template=bug_report.yml) · [Browse issues](https://github.com/zehnzwanzig/kanyx/issues)
 
+<p align="center">
+  <img src="docs/images/kanyx-screenshot.png" alt="Kanyx in dark mode with three Kanban columns, customizable wallpaper and a compact toolbar" width="1000">
+</p>
+<p align="center">
+  <sub>Dark mode, translucent columns and customizable wallpapers.</sub>
+</p>
+
 ## Features
 
 - Boards, reorderable/collapsible columns, draggable task cards
