@@ -4,6 +4,10 @@
 
 Built with **Python, PySide6 (Qt 6) and SQLite**. No accounts, cloud service or network connection required. Designed for a single workspace on a USB stick.
 
+> **Latest public build: [v1.0.0-rc.1 (pre-release)](https://github.com/zehnzwanzig/kanyx/releases/tag/v1.0.0-rc.1).** Windows x64 is available; the Linux x64 build is **experimental and has not been GUI-tested on a target Linux machine**.
+>
+> [Download Kanyx](https://github.com/zehnzwanzig/kanyx/releases) · [Report a bug](https://github.com/zehnzwanzig/kanyx/issues/new?template=bug_report.yml) · [Browse issues](https://github.com/zehnzwanzig/kanyx/issues)
+
 ## Features
 
 - Boards, reorderable/collapsible columns, draggable task cards
@@ -14,15 +18,43 @@ Built with **Python, PySide6 (Qt 6) and SQLite**. No accounts, cloud service or 
 - Six UI languages: English (default), German, Spanish, French, Japanese, Korean
 - Complete `.kanyx` workspace export/import with attachment files; database backups and integrity checks
 
-## Windows – run the portable executable
+## Download and run — Windows x64
 
-Download the `Kanyx.exe` artifact from a release/build made on Windows. Put it next to a `data/` directory on a writable USB stick (the application creates `data/` automatically on first run). Run `Kanyx.exe`; target machines do not need a separate Python or Qt installation.
+1. Open [GitHub Releases](https://github.com/zehnzwanzig/kanyx/releases/tag/v1.0.0-rc.1) and download **`Kanyx-v1.0.0-rc.1-windows-x64.zip`** from **Assets**.
+2. Extract the **entire archive** to a writable folder or USB stick.
+3. Open the extracted `Kanyx/` directory and run `Kanyx.exe`.
+
+**Keep `Kanyx.exe` and the `_internal/` directory together.** Kanyx is distributed as a portable *one-directory* application, not a standalone EXE. You do not need to install Python or Qt separately. On first launch, Kanyx creates a `data/` directory alongside the executable.
 
 > Windows SmartScreen or corporate security policies may warn about unsigned executables. This repository does not provide code signing.
 
-## Linux – run the portable executable
+## Download and run — Linux x64 (experimental)
 
-Download a Linux build produced on a compatible Linux distribution. Make it executable with `chmod +x Kanyx-linux`, then run `./Kanyx-linux`. **Linux portability is not guaranteed across all distributions**: libc/Qt desktop dependencies and `noexec` USB mounts can prevent execution. If your stick is mounted `noexec`, copy the executable to an executable local directory while keeping workspace data backed up; a different data directory will be used unless the executable remains next to the original `data/` folder.
+The Linux release candidate has not yet been GUI-tested on a real target machine. It may require extra desktop libraries, including `libxcb-shape.so.0`.
+
+1. Download **`Kanyx-v1.0.0-rc.1-linux-x64-experimental.zip`** from [Assets](https://github.com/zehnzwanzig/kanyx/releases/tag/v1.0.0-rc.1).
+2. Extract the entire archive, open the `Kanyx-linux/` directory, and run:
+
+```bash
+chmod +x Kanyx-linux
+./Kanyx-linux
+```
+
+Linux portability is not guaranteed across distributions: glibc, Qt desktop dependencies, and `noexec` USB mounts can prevent execution. If the USB mount is `noexec`, copy the **whole extracted directory** to an executable location and keep a backup of your workspace; this changes the location of the `data/` directory used by Kanyx.
+
+## Portable workspace, updates and backups
+
+Kanyx stores its database, attachments, wallpapers and backups in `data/` **next to the running executable** (or next to `db.py` when run from source). When updating, **keep the existing `data/` directory** and replace the application files. Back up your workspace before replacing anything. Older `data/pyban.db` databases are recognized; do not rename or remove them without making a backup.
+
+Use **Workspace → Export workspace** to write a full `.kanyx` backup (includes attachments). **Import workspace replaces the entire current workspace**, and creates a rollback copy of the previous data folder. A database-only backup does *not* include attachments. Exported workspaces are **not encrypted**.
+
+Do not use the same workspace simultaneously from multiple instances. A multi-instance lock is intentionally not implemented.
+
+## Bugs, feedback and contributions
+
+Found a bug or have an idea? Open a [GitHub Issue](https://github.com/zehnzwanzig/kanyx/issues/new/choose). For bug reports, use the [Bug Report template](https://github.com/zehnzwanzig/kanyx/issues/new?template=bug_report.yml) and include your operating system, Kanyx version, steps to reproduce, and what you expected to happen.
+
+**Do not attach personal workspace databases, exports, attachments, or other private data** to public issues. Screenshots should be checked for sensitive information before uploading. For contributions, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Run from source
 
@@ -39,20 +71,12 @@ On Windows you may run `.venv\Scripts\python.exe main.py` without activating the
 
 ## Build locally
 
-For public-release candidates use `scripts\build_windows_release.bat` on Windows or `bash scripts/build_linux_release.sh` on Linux. These create folders with separate Qt libraries and legal notice texts.
+For distribution candidates, use `scripts\build_windows_release.bat` on Windows or `bash scripts/build_linux_release.sh` on Linux. These create complete `onedir` folders with separate Qt libraries and the included license notices:
 
-- Windows: `scripts\build_windows.bat` → `dist\Kanyx.exe`
-- Linux: `bash scripts/build_linux.sh` → `dist/Kanyx-linux`
+- Windows: `dist/Kanyx/` (launcher: `Kanyx.exe`)
+- Linux: `dist/Kanyx-linux/` (launcher: `Kanyx-linux`)
 
-**Cross-compilation is not supported by these scripts**; build each executable on its respective operating system.
-
-## Portable workspace, updates and backups
-
-Kanyx stores its database, attachments, wallpapers and backups in `data/` **next to the running executable** (or next to `db.py` when run from source). Keep `data/` when updating to a newer executable. Older `data/pyban.db` databases are recognized; don't rename or remove them without making a backup.
-
-Use **Workspace → Export workspace** to write a full `.kanyx` backup (includes attachments). **Import workspace replaces the entire current workspace**, and creates a rollback copy of the previous data folder. A database-only backup does *not* include attachments. Exported workspaces are **not encrypted**.
-
-Do not use the same workspace simultaneously from multiple instances. A multi-instance lock is intentionally not implemented.
+The older `scripts/build_windows.bat` and `scripts/build_linux.sh` create single-file executables for local experimentation, **not** the recommended public binary packages. Cross-compilation is not supported by these scripts.
 
 ## Tests and releases
 
@@ -60,7 +84,7 @@ Do not use the same workspace simultaneously from multiple instances. A multi-in
 python -m unittest discover -s tests -v
 ```
 
-CI runs unit tests on Windows and Linux. Pushing a tag like `v1.0.0` invokes the build workflow and uploads Windows/Linux **onedir candidate folders** as GitHub Actions artifacts. These are **not automatically published as a GitHub Release**; the maintainer should test them and then upload them to a release manually.
+CI runs unit tests on Windows and Linux. Tagged builds and manually dispatched builds upload candidate directories as GitHub Actions artifacts; **GitHub Releases are published separately**. The first public pre-release is [v1.0.0-rc.1](https://github.com/zehnzwanzig/kanyx/releases/tag/v1.0.0-rc.1).
 
 See [CHANGELOG.md](CHANGELOG.md), [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), and [previous version documentation](docs/HISTORY_AND_FEATURES.md).
 
@@ -69,10 +93,10 @@ See [CHANGELOG.md](CHANGELOG.md), [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.
 - Single-user offline workspace; no cloud sync or multi-user collaboration.
 - Undo/redo does not cover every editor operation or permanent deletion.
 - Interface scaling adjusts text; not all controls scale proportionally.
-- Linux builds depend on the target desktop and libraries. Real-world GUI testing is required on target operating systems.
+- Linux builds depend on the target desktop and libraries; real-world GUI testing is still required.
 
 ## License and redistribution
 
-Kanyx's own source code is under the [MIT License](LICENSE). **PySide6/Qt and other dependencies are separately licensed.** Read [third-party notices](THIRD_PARTY_NOTICES.md) and the [release compliance checklist](docs/RELEASE_COMPLIANCE.md) before publishing any executable packages. The generic copyright notice currently in `LICENSE` must be confirmed by the maintainer.
+Kanyx's own source code is under the [MIT License](LICENSE). **PySide6/Qt and other dependencies are separately licensed.** See [third-party notices](THIRD_PARTY_NOTICES.md), [Qt source distribution notes](docs/THIRD_PARTY_SOURCES.md), and the [release compliance checklist](docs/RELEASE_COMPLIANCE.md).
 
-For public binary releases prefer the **onedir** scripts `scripts/build_windows_release.bat` and `scripts/build_linux_release.sh`; distribute each entire resulting folder as a ZIP, **not just the executable**. The older `build_windows.bat` and `build_linux.sh` continue to create single-file executables for local experimentation; they are not the recommended public binary format. The LGPL compliance checklist still requires an exact binary license audit and corresponding-source provision before release.
+The pre-release provides separately downloadable Qt/PySide6 source archives and bundled license notices. The LGPL corresponding-source, third-party attribution and modified-library requirements require further independent verification; a pre-release is not exempt from redistribution obligations. Distribute the **complete** portable binary folders, not just the executable.
