@@ -6,7 +6,7 @@ Built with **Python, PySide6 (Qt 6) and SQLite**. No accounts, cloud service or 
 
 > **Latest public build: [v1.0.0-rc.1 (pre-release)](https://github.com/zehnzwanzig/kanyx/releases/tag/v1.0.0-rc.1).** Windows x64 is available; the Linux x64 build is **experimental and has not been GUI-tested on a target Linux machine**.
 >
-> [Download Kanyx](https://github.com/zehnzwanzig/kanyx/releases) · [Report a bug](https://github.com/zehnzwanzig/kanyx/issues/new?template=bug_report.yml) · [Browse issues](https://github.com/zehnzwanzig/kanyx/issues)
+> [Download Kanyx](https://github.com/zehnzwanzig/kanyx/releases) · [Report a bug](https://github.com/zehnzwanzig/kanyx/issues/new?template=bug_report.yml) · [Browse issues](https://github.com/zehnzwanzig/kanyx/issues) · [Keyboard Shortcuts](docs/KEYBOARD_SHORTCUTS.md)
 
 <p align="center">
   <img src="docs/images/kanyx-screenshot.png" alt="Kanyx in dark mode with three Kanban columns, customizable wallpaper and a compact toolbar" width="1000">
@@ -56,6 +56,7 @@ Kanyx stores its database, attachments, wallpapers and backups in `data/` **next
 Use **Workspace → Export workspace** to write a full `.kanyx` backup (includes attachments). **Import workspace replaces the entire current workspace**, and creates a rollback copy of the previous data folder. A database-only backup does *not* include attachments. Exported workspaces are **not encrypted**.
 
 Do not use the same workspace simultaneously from multiple instances. A multi-instance lock is intentionally not implemented.
+
 
 ## Bugs, feedback and contributions
 
