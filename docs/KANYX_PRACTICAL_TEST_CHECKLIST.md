@@ -20,13 +20,13 @@
 
 | Field | Windows | Linux |
 |---|---|---|
-| Tester / date | | |
-| OS and exact version | | |
+| Tester / date | zehnzwanzig 19.10.2026 | |
+| OS and exact version | Microsoft Windows 11 Pro 10.0.26300 Build 26300 | |
 | Architecture | x64 | x64 |
-| Physical machine or VM | | |
-| Display / desktop session | Resolution, scaling | Resolution, X11 or Wayland |
-| Installation path | | |
-| USB/filesystem (if tested) | | |
+| Physical machine or VM | Physical Machine | |
+| Display / desktop session | Resolution 1920x1080, 100% scaling | Resolution, X11 or Wayland |
+| Installation path | C:/Kanyx/ | |
+| USB/filesystem (if tested) | D:\Kanyx Test Übung\ exFat | |
 | Build ZIP | `Kanyx-v1.0.0-rc.1-windows-x64.zip` | `Kanyx-v1.0.0-rc.1-linux-x64-experimental.zip` |
 | ZIP SHA-256 verified against release | Yes / No | Yes / No |
 | Test result | Not started / Pass / Fail | Not started / Pass / Fail |
@@ -39,18 +39,18 @@ Create a new board named `QA – Kanyx` with columns `To Do`, `In Progress`, and
 
 ## A. Windows x64 — installation and portability
 
-- [ ] **W01 · P0 — ZIP extraction.** Download the published Windows ZIP and extract the **entire `Kanyx/` folder**, including `_internal/`. No files are missing.
-- [ ] **W02 · P0 — Clean start.** `Kanyx.exe` launches on a Windows system **without a separate Python/Qt installation** and without administrator rights.
-- [ ] **W03 · P0 — Data directory.** On first use, `Kanyx/data/` and `data/kanyx.db` are created next to the EXE, on a writable location; the footer shows the expected path.
-- [ ] **W04 · P1 — Window behavior.** Move, resize, minimize, maximize/restore, and close the frameless window without UI glitches.
-- [ ] **W05 · P1 — Display scaling.** Test at 100% and 125% or 150% Windows display scaling; buttons and dialogs remain reachable.
-- [ ] **W06 · P1 — Paths.** Run from a folder with spaces and non-ASCII characters (e.g. `Kanyx Test Übung`). Creating and saving data works.
-- [ ] **W07 · P0 — Offline.** Disconnect internet access, reopen the program and use an existing board. No cloud service or login is required.
-- [ ] **W08 · P0 — Reopen.** Close Kanyx normally, relaunch, and verify that boards, cards, settings, and attachments persist.
-- [ ] **W09 · P0 — Portable USB.** Copy the **complete application folder** to a writable USB stick, run from that stick, change a card and reopen it after safely ejecting/reconnecting.
-- [ ] **W10 · P0 — Transfer.** Move the full folder (including `data/`) to another writable Windows location or machine; all content stays available.
-- [ ] **W11 · P0 — Update preservation.** Export a backup; copy the `data/` folder into a fresh extracted application directory; launch and verify that no workspace data was lost. Do **not** overwrite `data/` with an empty folder.
-- [ ] **W12 · P2 — Unsigned binary.** Record any SmartScreen/security warning as an expected unsigned-build limitation; do not disable organizational security controls to force a test.
+- [x] **W01 · P0 — ZIP extraction.** Download the published Windows ZIP and extract the **entire `Kanyx/` folder**, including `_internal/`. No files are missing.
+- [x] **W02 · P0 — Clean start.** `Kanyx.exe` launches on a Windows system **without a separate Python/Qt installation** and without administrator rights.
+- [x] **W03 · P0 — Data directory.** On first use, `Kanyx/data/` and `data/kanyx.db` are created next to the EXE, on a writable location; the footer shows the expected path.
+- [x] **W04 · P1 — Window behavior.** Move, resize, minimize, maximize/restore, and close the frameless window without UI glitches.
+- [x] **W05 · P1 — Display scaling.** Test at 100% and 125% or 150% Windows display scaling; buttons and dialogs remain reachable.
+- [x] **W06 · P1 — Paths.** Run from a folder with spaces and non-ASCII characters (e.g. `Kanyx Test Übung`). Creating and saving data works.
+- [x] **W07 · P0 — Offline.** Disconnect internet access, reopen the program and use an existing board. No cloud service or login is required.
+- [x] **W08 · P0 — Reopen.** Close Kanyx normally, relaunch, and verify that boards, cards, settings, and attachments persist.
+- [x] **W09 · P0 — Portable USB.** Copy the **complete application folder** to a writable USB stick, run from that stick, change a card and reopen it after safely ejecting/reconnecting.
+- [x] **W10 · P0 — Transfer.** Move the full folder (including `data/`) to another writable Windows location or machine; all content stays available.
+- [x] **W11 · P0 — Update preservation.** Export a backup; copy the `data/` folder into a fresh extracted application directory; launch and verify that no workspace data was lost. Do **not** overwrite `data/` with an empty folder.
+- [x] **W12 · P2 — Unsigned binary.** Record any SmartScreen/security warning as an expected unsigned-build limitation; do not disable organizational security controls to force a test.
 
 ## B. Linux x64 — installation and portability
 
@@ -88,224 +88,224 @@ Tick the Windows and Linux tests separately. The scenarios intentionally cover t
 
 Create `QA – Kanyx` and another board; switch between them; titles and contents belong to the correct board.
 
-- [ ] **Windows** — pass
+- [x] **Windows** — pass
 - [ ] **Linux** — pass
 
 ### F02 · P1 — Board management
 
 Rename a board and duplicate it; verify copied columns and cards. Delete only a disposable board after confirming the warning.
 
-- [ ] **Windows** — pass
+- [x] **Windows** — pass
 - [ ] **Linux** — pass
 
 ### F03 · P1 — Board templates
 
 Create a board from a template and inspect its preset columns.
 
-- [ ] **Windows** — pass
+- [x] **Windows** — pass
 - [ ] **Linux** — pass
 
 ### F04 · P1 — Column management
 
 Create a column, rename it, collapse/expand it and reorder columns using their drag handles.
 
-- [ ] **Windows** — pass
+- [x] **Windows** — pass
 - [ ] **Linux** — pass
 
 ### F05 · P0 — Create and edit cards
 
 Add a card, rename it, write a multiline description, save, close and reopen; contents are unchanged.
 
-- [ ] **Windows** — pass
+- [x] **Windows** — pass
 - [ ] **Linux** — pass
 
 ### F06 · P0 — Card drag & drop
 
 Move a card between `To Do`, `In Progress` and `Done`, reorder it within a column; order persists after restart.
 
-- [ ] **Windows** — pass
+- [x] **Windows** — pass
 - [ ] **Linux** — pass
 
 ### F07 · P1 — Priorities and dates
 
 Set a non-default priority and a due date; verify both are retained and displayed.
 
-- [ ] **Windows** — pass
+- [x] **Windows** — pass
 - [ ] **Linux** — pass
 
 ### F08 · P1 — Colors and tags
 
 Set a card color and multiple comma-separated tags; reopen and check the values.
 
-- [ ] **Windows** — pass
+- [x] **Windows** — pass
 - [ ] **Linux** — pass
 
 ### F09 · P1 — Checklist
 
 Add two checklist items, rename one, check one complete, remove one; the remaining content persists.
 
-- [ ] **Windows** — pass
+- [x] **Windows** — pass
 - [ ] **Linux** — pass
 
 ### F10 · P1 — Markdown source and preview
 
 Enter headings, bold text and a list; toggle Markdown preview, save and reopen. The raw Markdown source is not corrupted.
 
-- [ ] **Windows** — pass
+- [x] **Windows** — pass
 - [ ] **Linux** — pass
 
 ### F11 · P0 — Attach files
 
 Attach a small `.txt` and `.png`, reopen the card and open both; the files are stored in `data/attachments/`.
 
-- [ ] **Windows** — pass
+- [x] **Windows** — pass
 - [ ] **Linux** — pass
 
 ### F12 · P1 — Attachment removal
 
 Remove one attachment from a disposable card; it is no longer listed, while unrelated attachments remain intact.
 
-- [ ] **Windows** — pass
+- [x] **Windows** — pass
 - [ ] **Linux** — pass
 
 ### F13 · P1 — Duplicate card
 
 Duplicate a card with tags, checklist and attachment; both cards remain usable. Editing/deleting a duplicate must not corrupt the original attachment.
 
-- [ ] **Windows** — pass
+- [x] **Windows** — pass
 - [ ] **Linux** — pass
 
 ### F14 · P1 — Archive and restore
 
 Archive a card; it disappears from the active board and can be restored through **Archive**.
 
-- [ ] **Windows** — pass
+- [x] **Windows** — pass
 - [ ] **Linux** — pass
 
 ### F15 · P1 — Search
 
 Search by card title, description text and tag; results update correctly and clearing search restores all cards.
 
-- [ ] **Windows** — pass
+- [x] **Windows** — pass
 - [ ] **Linux** — pass
 
 ### F16 · P1 — Priority filter
 
 Filter by priority and reset to **All**; expected cards return.
 
-- [ ] **Windows** — pass
+- [x] **Windows** — pass
 - [ ] **Linux** — pass
 
 ### F17 · P1 — Undo/redo
 
 Test `Ctrl+Z`, `Ctrl+Shift+Z` and `Ctrl+Y` on a **supported** operation (e.g. a card move). Do not assume every action is undoable.
 
-- [ ] **Windows** — pass
+- [x] **Windows** — pass
 - [ ] **Linux** — pass
 
 ### F18 · P1 — Keyboard shortcuts
 
 Check `Ctrl+N`, `Ctrl+Shift+N`, `Ctrl+F`/`Ctrl+L`, `Esc`, and `Ctrl+1`/`2`/`3` (if corresponding boards exist).
 
-- [ ] **Windows** — pass
+- [x] **Windows** — pass
 - [ ] **Linux** — pass
 
 ### F19 · P1 — Appearance settings
 
 Change wallpaper brightness, column opacity and UI scaling; check that settings take effect and persist.
 
-- [ ] **Windows** — pass
+- [x] **Windows** — pass
 - [ ] **Linux** — pass
 
 ### F20 · P1 — Wallpaper
 
 Apply a non-sensitive wallpaper, relaunch and confirm it loads; remove it and verify removal.
 
-- [ ] **Windows** — pass
+- [x] **Windows** — pass
 - [ ] **Linux** — pass
 
 ### F21 · P1 — Language switching
 
 Switch between English, German and at least one other supported language; existing user-created board/card names remain unchanged.
 
-- [ ] **Windows** — pass
+- [x] **Windows** — pass
 - [ ] **Linux** — pass
 
 ### F22 · P0 — Complete workspace export
 
 Use **Workspace → Export workspace** to create a `.kanyx` archive; ensure it is nonempty and includes test attachments and wallpaper.
 
-- [ ] **Windows** — pass
+- [x] **Windows** — pass
 - [ ] **Linux** — pass
 
 ### F23 · P0 — Import cancellation
 
 Start an import, choose **No/Cancel** at the replacement warning; current workspace must remain unchanged.
 
-- [ ] **Windows** — pass
+- [x] **Windows** — pass
 - [ ] **Linux** — pass
 
 ### F24 · P0 — Complete workspace import
 
 In a **disposable** workspace, import the exported `.kanyx` file. Verify boards, cards, tags, checklists, attachments and wallpaper match the export.
 
-- [ ] **Windows** — pass
+- [x] **Windows** — pass
 - [ ] **Linux** — pass
 
 ### F25 · P0 — Import rollback evidence
 
 After successful import, verify the previous workspace was retained as a rollback folder outside the active `data/` directory.
 
-- [ ] **Windows** — pass
+- [x] **Windows** — pass
 - [ ] **Linux** — pass
 
 ### F26 · P0 — Corrupt import rejection
 
 Try importing a deliberately damaged *copy* of a `.kanyx` export. It must fail without modifying the current workspace.
 
-- [ ] **Windows** — pass
+- [x] **Windows** — pass
 - [ ] **Linux** — pass
 
 ### F27 · P0 — Database backup
 
 Use **Workspace → Create database backup**. Check that a nonempty SQLite backup appears in `data/backups/`.
 
-- [ ] **Windows** — pass
+- [x] **Windows** — pass
 - [ ] **Linux** — pass
 
 ### F28 · P0 — Data integrity
 
 Use **Workspace → Check data integrity** after normal editing and an import. No missing-file errors should appear.
 
-- [ ] **Windows** — pass
+- [x] **Windows** — pass
 - [ ] **Linux** — pass
 
 ### F29 · P0 — Restart persistence
 
 Fully close the app and relaunch; compare the saved board structure, card details and file attachments against the expected test data.
 
-- [ ] **Windows** — pass
+- [x] **Windows** — pass
 - [ ] **Linux** — pass
 
 ### F30 · P1 — Delete confirmation
 
 Delete a disposable card and verify the confirmation prompt. Cancel once; only confirm deletion in a separate test.
 
-- [ ] **Windows** — pass
+- [x] **Windows** — pass
 - [ ] **Linux** — pass
 
 ### F31 · P1 — Many cards and scrolling
 
 Add enough cards to require scrolling in one column; the list, controls and dragging remain usable.
 
-- [ ] **Windows** — pass
+- [x] **Windows** — pass
 - [ ] **Linux** — pass
 
 ### F32 · P1 — No interference from other boards
 
 Edit cards on board A, switch to board B and return; board B is unaffected.
 
-- [ ] **Windows** — pass
+- [x] **Windows** — pass
 - [ ] **Linux** — pass
 
 ---
@@ -314,9 +314,9 @@ Edit cards on board A, switch to board B and return; board B is unaffected.
 
 ### Windows
 
-- [ ] **W13 · P0 — Missing file failure is controlled.** On a *disposable copy only*, rename `_internal/` temporarily, try launching, and confirm that the app fails clearly rather than silently damaging `data/`. Restore the folder afterward.
-- [ ] **W14 · P1 — Read-only location.** Test on a disposable read-only location; record whether failure is understandable and whether a previously saved workspace remains safe.
-- [ ] **W15 · P1 — Multiple launches.** Check accidental second launch using the same workspace; **simultaneous multi-instance use is not supported**. Record actual behavior, avoid editing from both instances.
+- [x] **W13 · P0 — Missing file failure is controlled.** On a *disposable copy only*, rename `_internal/` temporarily, try launching, and confirm that the app fails clearly rather than silently damaging `data/`. Restore the folder afterward.
+- [x] **W14 · P1 — Read-only location.** Test on a disposable read-only location; record whether failure is understandable and whether a previously saved workspace remains safe.
+- [x] **W15 · P1 — Multiple launches.** Check accidental second launch using the same workspace; **simultaneous multi-instance use is not supported**. Record actual behavior, avoid editing from both instances.
 
 ### Linux
 
