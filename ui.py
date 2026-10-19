@@ -1,6 +1,7 @@
 import os
 import sys
 import re
+import sqlite3
 from pathlib import Path
 from PySide6.QtCore import Qt, QMimeData, QPoint, QUrl, QRect, QEvent
 from PySide6.QtGui import QDrag, QDesktopServices, QPixmap, QPainter, QColor, QIcon, QShortcut, QKeySequence
@@ -138,6 +139,17 @@ class LaneDragHandle(QLabel):
         mime = QMimeData()
         mime.setData('application/x-kanyx-lane', str(self.column.lane['id']).encode('ascii'))
         drag.setMimeData(mime)
+        # Match task dragging: show the actual column as a translucent ghost.
+        preview = self.column.grab()
+        if not preview.isNull():
+            translucent = QPixmap(preview.size())
+            translucent.fill(Qt.GlobalColor.transparent)
+            painter = QPainter(translucent)
+            painter.setOpacity(0.68)
+            painter.drawPixmap(0, 0, preview)
+            painter.end()
+            drag.setPixmap(translucent)
+            drag.setHotSpot(self.mapTo(self.column, self.start))
         drag.exec(Qt.DropAction.MoveAction)
 
     def dragEnterEvent(self, event):
@@ -351,9 +363,9 @@ class DropColumn(QFrame):
     def add_card(self):
         title = ask(self, self.window.t('New task'), self.window.t('Task title:'))
         if title:
-            cid = self.window.store.add_card(self.lane['id'], title)
+            # No database insert before the editor is accepted.
+            CardDialog(self.window, None, is_new=True, lane_id=self.lane['id'], initial_title=title).exec()
             self.window.refresh()
-            self.window.edit_card(cid, is_new=True)
 
     def manage(self):
         choices = [self.window.t(k) for k in ('Rename', 'Move left', 'Move right', 'Delete column')]
@@ -421,15 +433,40 @@ class DropColumn(QFrame):
 
 
 class CardDialog(QDialog):
-    def __init__(self, window, cid, is_new=False):
+    def __init__(self, window, cid, is_new=False, lane_id=None, initial_title=''):
         super().__init__(window)
         self.window = window
         self.store = window.store
         self.cid = cid
-        card = self.store.card(cid)
-        self.setWindowTitle(window.t('Edit task'))
-        self.resize(590, 720)
-        root = QVBoxLayout(self)
+        self.is_new = is_new
+        self.lane_id = lane_id
+        self.pending_removed_ids = set()
+        self.pending_added_paths = []
+        if is_new:
+            if lane_id is None:
+                raise ValueError('New task requires a target column')
+            card = {'title': initial_title, 'description': '', 'priority': 'Normal',
+                    'due': '', 'color': ''}
+        else:
+            card = self.store.card(cid)
+            if card is None:
+                raise ValueError('Task does not exist')
+        self.setWindowTitle(window.t('New task') if is_new else window.t('Edit task'))
+        # At Windows 125/150% DPI (or on smaller displays), the editor must
+        # scroll its fields instead of hiding Save and Cancel off-screen.
+        screen = QApplication.primaryScreen()
+        available = screen.availableGeometry() if screen else None
+        self.resize(min(590, max(400, available.width() - 60)) if available else 590,
+                    min(720, max(350, available.height() - 80)) if available else 720)
+        dialog_layout = QVBoxLayout(self)
+        fields_scroll = QScrollArea(self)
+        fields_scroll.setWidgetResizable(True)
+        fields_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        fields_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        fields = QWidget()
+        root = QVBoxLayout(fields)
+        fields_scroll.setWidget(fields)
+        dialog_layout.addWidget(fields_scroll, 1)
         self.title = QLineEdit(card['title'])
         root.addWidget(QLabel(window.t('Title')))
         root.addWidget(self.title)
@@ -490,13 +527,13 @@ class CardDialog(QDialog):
         colors.addWidget(self.card_color)
         root.addLayout(colors)
         root.addWidget(QLabel(window.t('Tags (comma-separated)')))
-        self.tags = QLineEdit(', '.join(self.store.card_tags(cid)))
+        self.tags = QLineEdit(', '.join(self.store.card_tags(cid)) if not is_new else '')
         root.addWidget(self.tags)
         root.addWidget(QLabel(window.t('Checklist (double-click to edit, check to complete)')))
         self.checks = QListWidget()
         self.checks.setItemDelegate(ChecklistEditDelegate(self.checks))
         self.checks.setMaximumHeight(150)
-        for row in self.store.card_checks(cid): self.add_check(row['body'],bool(row['done']))
+        for row in (self.store.card_checks(cid) if not is_new else []): self.add_check(row['body'],bool(row['done']))
         root.addWidget(self.checks)
         cline = QHBoxLayout()
         cline.addWidget(button('＋ ' + window.t('Add checklist item'), lambda: self.add_check(window.t('New item'))))
@@ -513,13 +550,14 @@ class CardDialog(QDialog):
         root.addLayout(fline)
         self.load_files()
         actions = QHBoxLayout()
-        actions.addWidget(button(window.t('Archive'), self.archive))
-        actions.addWidget(button(window.t('Duplicate'), self.duplicate))
-        actions.addWidget(button(window.t('Delete task'), self.delete, 'danger'))
+        if not is_new:
+            actions.addWidget(button(window.t('Archive'), self.archive))
+            actions.addWidget(button(window.t('Duplicate'), self.duplicate))
+            actions.addWidget(button(window.t('Delete task'), self.delete, 'danger'))
         actions.addStretch()
         actions.addWidget(button(window.t('Cancel'), self.reject))
         actions.addWidget(button(window.t('Save'), self.save, 'primary'))
-        root.addLayout(actions)
+        dialog_layout.addLayout(actions)
         # Existing cards open in formatted preview; new cards open ready for typing.
         # The editable source in self.desc is never replaced by rendered Markdown.
         self.markdown_toggle.setChecked(not is_new)
@@ -532,27 +570,48 @@ class CardDialog(QDialog):
 
     def load_files(self):
         self.files.clear()
-        for row in self.store.card_files(self.cid):
-            item = QListWidgetItem(row['original_name'])
-            item.setData(Qt.ItemDataRole.UserRole,row)
+        if not self.is_new:
+            for row in self.store.card_files(self.cid):
+                if row['id'] in self.pending_removed_ids:
+                    continue
+                item = QListWidgetItem(row['original_name'])
+                item.setData(Qt.ItemDataRole.UserRole, {'stored': row})
+                self.files.addItem(item)
+        for index, path in enumerate(self.pending_added_paths):
+            item = QListWidgetItem('＋ ' + path.name)
+            item.setData(Qt.ItemDataRole.UserRole, {'pending_index': index})
             self.files.addItem(item)
 
     def attach(self):
-        paths, _ = QFileDialog.getOpenFileNames(self,self.window.t('Choose attachments'))
+        paths, _ = QFileDialog.getOpenFileNames(self, self.window.t('Choose attachments'))
+        # Stage additions: Cancel must never copy files into the workspace.
         for path in paths:
-            try: self.store.add_file(self.cid,path)
-            except OSError as exc: QMessageBox.warning(self,self.window.t('File error'),str(exc))
+            candidate = Path(path)
+            if candidate.is_file():
+                self.pending_added_paths.append(candidate)
+            else:
+                QMessageBox.warning(self, self.window.t('File error'), str(candidate))
         self.load_files()
 
     def remove_file(self):
         item = self.files.currentItem()
-        if item:
-            self.store.delete_file(item.data(Qt.ItemDataRole.UserRole)['id'])
-            self.load_files()
+        if item is None:
+            return
+        data = item.data(Qt.ItemDataRole.UserRole)
+        if 'pending_index' in data:
+            self.pending_added_paths.pop(data['pending_index'])
+        else:
+            # Stage deletions: the file and database record survive Cancel.
+            self.pending_removed_ids.add(data['stored']['id'])
+        self.load_files()
 
     def open_file(self, item):
-        file = self.store.attachments / item.data(Qt.ItemDataRole.UserRole)['stored_name']
-        QDesktopServices.openUrl(QUrl.fromLocalFile(str(file)))
+        data = item.data(Qt.ItemDataRole.UserRole)
+        if 'pending_index' in data:
+            path = self.pending_added_paths[data['pending_index']]
+        else:
+            path = self.store.attachments / data['stored']['stored_name']
+        QDesktopServices.openUrl(QUrl.fromLocalFile(str(path)))
 
     def save(self):
         title = self.title.text().strip()
@@ -560,8 +619,27 @@ class CardDialog(QDialog):
             QMessageBox.warning(self,self.window.t('Missing title'),self.window.t('Task needs a title.'))
             return
         checks = [(self.checks.item(i).text(), self.checks.item(i).checkState() == Qt.CheckState.Checked) for i in range(self.checks.count())]
-        self.store.update_card(self.cid,title,self.desc.toPlainText(),self.priority.currentData(),
-            self.due.date().toString('yyyy-MM-dd') if self.has_due.isChecked() else '',self.tags.text(),checks,self.card_color.currentData())
+        new_cid = None
+        added_ids = []
+        try:
+            if self.is_new:
+                new_cid = self.store.add_card(self.lane_id, title)
+                self.cid = new_cid
+            self.store.update_card(self.cid, title, self.desc.toPlainText(), self.priority.currentData(),
+                self.due.date().toString('yyyy-MM-dd') if self.has_due.isChecked() else '',
+                self.tags.text(), checks, self.card_color.currentData())
+            for path in self.pending_added_paths:
+                added_ids.append(self.store.add_file(self.cid, path))
+            for file_id in self.pending_removed_ids:
+                self.store.delete_file(file_id)
+        except (OSError, ValueError, sqlite3.Error) as exc:
+            for file_id in added_ids:
+                self.store.delete_file(file_id)
+            if new_cid is not None:
+                self.store.delete_card(new_cid)
+                self.cid = None
+            QMessageBox.warning(self, self.window.t('File error'), str(exc))
+            return
         self.accept()
 
     def archive(self):
@@ -599,7 +677,7 @@ class MainWindow(QMainWindow):
             self.setWindowIcon(QIcon(str(icon_path)))
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
         self.resize(1200, 780)
-        self.setMinimumSize(780,500)
+        self.setMinimumSize(780, 540)
         self.resize_margin = 7
         self.drag_edge = None
         self.history = []
@@ -626,7 +704,11 @@ class MainWindow(QMainWindow):
         stack = QVBoxLayout(root)
         stack.setContentsMargins(12, 4, 12, 12)
         stack.addWidget(TitleBar(self))
-        top = QHBoxLayout()
+        # Keep controls legible at high display/UI scaling. Actions scroll
+        # horizontally when the window is narrow; search stays on a second row.
+        toolbar_content = QWidget()
+        top = QHBoxLayout(toolbar_content)
+        top.setContentsMargins(0, 0, 0, 0)
         self.board_select = QComboBox()
         self.board_select.setMinimumWidth(190)
         self.board_select.currentIndexChanged.connect(self.refresh)
@@ -648,28 +730,43 @@ class MainWindow(QMainWindow):
         data_menu.addAction(self.t('Check data integrity'), self.check_integrity)
         data_btn.setMenu(data_menu)
         top.addWidget(data_btn)
-        top.addWidget(QLabel(self.t('Language') + ':'))
+        toolbar_content.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        toolbar_content.adjustSize()
+        tools_scroll = QScrollArea()
+        tools_scroll.setObjectName('toolsScroll')
+        tools_scroll.setWidgetResizable(False)
+        tools_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        tools_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        tools_scroll.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        tools_scroll.setWidget(toolbar_content)
+        self.toolbar_content = toolbar_content
+        self.tools_scroll = tools_scroll
+        stack.addWidget(tools_scroll)
+        filters = QHBoxLayout()
+        filters.addWidget(QLabel(self.t('Language') + ':'))
         self.language_select = QComboBox()
         for code, name in LANGUAGES.items():
             self.language_select.addItem(name, code)
         self.language_select.setCurrentIndex(self.language_select.findData(self.language))
         self.language_select.currentIndexChanged.connect(self.change_language)
-        top.addWidget(self.language_select)
-        top.addSpacing(16)
+        filters.addWidget(self.language_select)
         self.search = QLineEdit()
+        self.search.setMinimumWidth(120)
         self.search.setPlaceholderText(self.t('Search tasks, descriptions and tags…'))
         self.search.textChanged.connect(self.refresh)
-        top.addWidget(self.search,1)
+        filters.addWidget(self.search,1)
         self.priority = QComboBox()
         self.priority.addItem(self.t('All'), 'Alle')
         for key, value in PRIORITIES: self.priority.addItem(self.t(key), value)
         self.priority.currentIndexChanged.connect(self.refresh)
-        top.addWidget(self.priority)
-        stack.addLayout(top)
+        filters.addWidget(self.priority)
+        stack.addLayout(filters)
         sub = QHBoxLayout()
         self.heading = QLabel(self.t('My board'))
         self.heading.setObjectName('heading')
-        sub.addWidget(self.heading)
+        self.heading.setMinimumWidth(0)
+        self.heading.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+        sub.addWidget(self.heading, 1)
         sub.addStretch()
         sub.addWidget(button('＋ ' + self.t('New column'), self.add_lane,'primary'))
         stack.addLayout(sub)
@@ -680,6 +777,8 @@ class MainWindow(QMainWindow):
         stack.addWidget(self.scroll,1)
         self.status = QLabel()
         self.status.setObjectName('subtle')
+        self.status.setMinimumWidth(0)
+        self.status.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
         footer = QHBoxLayout()
         footer.addWidget(self.status, 1)
         grip = QSizeGrip(root)
@@ -688,6 +787,16 @@ class MainWindow(QMainWindow):
         self.search.setText(search_term)
         self.priority.setCurrentIndex(max(0, self.priority.findData(priority_code)))
         self.load_boards(preferred_board)
+        self.resize_toolbar_to_contents()
+
+    def resize_toolbar_to_contents(self):
+        # Qt style sheets can resize the buttons as interface-scale changes.
+        # Always allow enough vertical room for a horizontal scrollbar.
+        if hasattr(self, 'toolbar_content'):
+            self.toolbar_content.adjustSize()
+            bar = self.tools_scroll.horizontalScrollBar()
+            self.tools_scroll.setFixedHeight(
+                self.toolbar_content.sizeHint().height() + bar.sizeHint().height() + 6)
 
     def t(self, key):
         return tr(self.language, key)
@@ -720,6 +829,7 @@ class MainWindow(QMainWindow):
             self.history.clear()
             self.future.clear()
             self.build_interface()
+            self.apply_visual_settings()
             QMessageBox.information(self, self.t('Workspace'),
                 self.t('Workspace imported successfully.') + '\n' +
                 self.t('Previous workspace saved at:') + '\n' + str(previous))
@@ -796,7 +906,9 @@ class MainWindow(QMainWindow):
             columns.addWidget(DropColumn(self,lane,[card for card in cards if card['lane_id']==lane['id']]))
         columns.addStretch()
         self.scroll.setWidget(container)
-        self.status.setText(f"{len(cards)} {self.t('tasks')} · {len(lanes)} {self.t('columns')} · {self.t('Offline')} · {self.t('Data')}: {self.store.dbfile}")
+        status = f"{len(cards)} {self.t('tasks')} · {len(lanes)} {self.t('columns')} · {self.t('Offline')} · {self.t('Data')}: {self.store.dbfile}"
+        self.status.setText(status)
+        self.status.setToolTip(status)
 
     def change_with_undo(self, forward, backwards):
         forward()
@@ -847,6 +959,7 @@ class MainWindow(QMainWindow):
     def apply_visual_settings(self, settings=None):
         values = settings or {key: visual_setting(self.store, key) for key in DEFAULT_VISUALS}
         QApplication.instance().setStyleSheet(themed_style(values['column_opacity'], values['ui_scale']))
+        self.resize_toolbar_to_contents()
         root = self.centralWidget()
         if isinstance(root, WallpaperRoot):
             root.brightness = values['wallpaper_brightness']
@@ -982,8 +1095,9 @@ class MainWindow(QMainWindow):
             self.refresh()
 
     def edit_card(self, cid, is_new=False):
-        CardDialog(self,cid,is_new=is_new).exec()
+        result = CardDialog(self, cid, is_new=is_new).exec()
         self.refresh()
+        return result
 
     def closeEvent(self, event):
         self.store.close()
