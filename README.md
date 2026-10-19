@@ -4,9 +4,9 @@
 
 Built with **Python, PySide6 (Qt 6) and SQLite**. No accounts, cloud service or network connection required. Designed for a single workspace on a USB stick.
 
-> **Latest public build: [v1.0.0-rc.1 (pre-release)](https://github.com/zehnzwanzig/kanyx/releases/tag/v1.0.0-rc.1).** Windows x64 is available; the Linux x64 build is **experimental and has not been GUI-tested on a target Linux machine**.
+> **Latest public build: [v1.0.0-rc.2 (pre-release)](https://github.com/zehnzwanzig/kanyx/releases/tag/v1.0.0-rc.2).** Windows x64 is available; the Linux x64 build is **experimental and has not been GUI-tested on a target Linux machine**.
 >
-> [Download Kanyx](https://github.com/zehnzwanzig/kanyx/releases) · [Report a bug](https://github.com/zehnzwanzig/kanyx/issues/new?template=bug_report.yml) · [Browse issues](https://github.com/zehnzwanzig/kanyx/issues) · [Keyboard Shortcuts](docs/KEYBOARD_SHORTCUTS.md)
+> [Download Kanyx](https://github.com/zehnzwanzig/kanyx/releases/tag/v1.0.0-rc.2) · [Project website](https://zehnzwanzig.github.io/kanyx/) · [Report a bug](https://github.com/zehnzwanzig/kanyx/issues/new?template=bug_report.yml) · [Browse issues](https://github.com/zehnzwanzig/kanyx/issues) · [Keyboard Shortcuts](docs/KEYBOARD_SHORTCUTS.md)
 
 <p align="center">
   <img src="docs/images/kanyx-screenshot.png" alt="Kanyx in dark mode with three Kanban columns, customizable wallpaper and a compact toolbar" width="1000">
@@ -14,6 +14,10 @@ Built with **Python, PySide6 (Qt 6) and SQLite**. No accounts, cloud service or 
 <p align="center">
   <sub>Dark mode, translucent columns and customizable wallpapers.</sub>
 </p>
+
+## What's improved in RC2
+
+RC2 fixes narrow-window scaling, adds translucent column drag previews, makes attachment changes respect **Save/Cancel**, applies imported appearance settings immediately, and prevents cancelled new tasks from being created. [Release notes](https://github.com/zehnzwanzig/kanyx/releases/tag/v1.0.0-rc.2).
 
 ## Features
 
@@ -27,7 +31,7 @@ Built with **Python, PySide6 (Qt 6) and SQLite**. No accounts, cloud service or 
 
 ## Download and run — Windows x64
 
-1. Open [GitHub Releases](https://github.com/zehnzwanzig/kanyx/releases/tag/v1.0.0-rc.1) and download **`Kanyx-v1.0.0-rc.1-windows-x64.zip`** from **Assets**.
+1. Open [GitHub Releases](https://github.com/zehnzwanzig/kanyx/releases/tag/v1.0.0-rc.2) and download **`Kanyx-v1.0.0-rc.2-windows-x64.zip`** from **Assets**.
 2. Extract the **entire archive** to a writable folder or USB stick.
 3. Open the extracted `Kanyx/` directory and run `Kanyx.exe`.
 
@@ -39,7 +43,7 @@ Built with **Python, PySide6 (Qt 6) and SQLite**. No accounts, cloud service or 
 
 The Linux release candidate has not yet been GUI-tested on a real target machine. It may require extra desktop libraries, including `libxcb-shape.so.0`.
 
-1. Download **`Kanyx-v1.0.0-rc.1-linux-x64-experimental.zip`** from [Assets](https://github.com/zehnzwanzig/kanyx/releases/tag/v1.0.0-rc.1).
+1. Download **`Kanyx-v1.0.0-rc.2-linux-x64-experimental.zip`** from [Assets](https://github.com/zehnzwanzig/kanyx/releases/tag/v1.0.0-rc.2).
 2. Extract the entire archive, open the `Kanyx-linux/` directory, and run:
 
 ```bash
@@ -92,7 +96,7 @@ The older `scripts/build_windows.bat` and `scripts/build_linux.sh` create single
 python -m unittest discover -s tests -v
 ```
 
-CI runs unit tests on Windows and Linux. Tagged builds and manually dispatched builds upload candidate directories as GitHub Actions artifacts; **GitHub Releases are published separately**. The first public pre-release is [v1.0.0-rc.1](https://github.com/zehnzwanzig/kanyx/releases/tag/v1.0.0-rc.1).
+CI runs unit tests on Windows and Linux. Tagged builds and manually dispatched builds upload candidate directories as GitHub Actions artifacts; **GitHub Releases are published separately**. The current pre-release is [v1.0.0-rc.2](https://github.com/zehnzwanzig/kanyx/releases/tag/v1.0.0-rc.2); the first public pre-release was [v1.0.0-rc.1](https://github.com/zehnzwanzig/kanyx/releases/tag/v1.0.0-rc.1).
 
 See [CHANGELOG.md](CHANGELOG.md), [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), and [previous version documentation](docs/HISTORY_AND_FEATURES.md).
 
