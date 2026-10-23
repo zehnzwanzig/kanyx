@@ -314,17 +314,19 @@ class DropColumn(QFrame):
         outer = QVBoxLayout(self)
         outer.setContentsMargins(12, 12, 12, 12)
         head = QHBoxLayout()
-        name = LaneDragHandle(self, f"⠿  {lane['title']}  {len(cards)}")
-        if not lane.get('collapsed'):
-            head.addWidget(name)
+        collapsed = bool(lane.get('collapsed'))
+        collapse_button = button('›' if collapsed else '‹', self.toggle_collapse)
+        collapse_button.setObjectName('columnToggle')
+        collapse_button.setToolTip(window.t('Expand column') if collapsed else window.t('Collapse column'))
+        collapse_button.setAccessibleName(collapse_button.toolTip())
+        if collapsed:
+            # One centered, fully clickable button; no misleading loose triangle.
+            collapse_button.setFixedSize(34, 38)
+            head.addWidget(collapse_button, 0, Qt.AlignmentFlag.AlignHCenter)
         else:
-            name.deleteLater()
-            compact = QLabel('▸')
-            compact.setToolTip(lane['title'])
-            head.addWidget(compact)
-        head.addStretch()
-        head.addWidget(button('›' if lane.get('collapsed') else '‹', self.toggle_collapse))
-        if not lane.get('collapsed'):
+            name = LaneDragHandle(self, f"⠿  {lane['title']}  {len(cards)}")
+            head.addWidget(name, 1)
+            head.addWidget(collapse_button)
             head.addWidget(button('⋯', self.manage))
         outer.addLayout(head)
         area = CardScroll(self)
@@ -761,6 +763,24 @@ class MainWindow(QMainWindow):
         self.priority.currentIndexChanged.connect(self.refresh)
         filters.addWidget(self.priority)
         stack.addLayout(filters)
+        # Display an unmistakable, actionable warning whenever results are filtered.
+        self.filter_notice = QFrame()
+        self.filter_notice.setObjectName('activeFilterNotice')
+        self.filter_notice.setStyleSheet(
+            'QFrame#activeFilterNotice { background-color: #473217; border: 1px solid #e8ad50; border-radius: 9px; }'
+            'QFrame#activeFilterNotice QLabel { color: #ffdf9a; font-weight: 700; }'
+        )
+        notice_layout = QHBoxLayout(self.filter_notice)
+        notice_layout.setContentsMargins(12, 5, 8, 5)
+        self.filter_notice_label = QLabel()
+        self.filter_notice_label.setObjectName('activeFilterText')
+        notice_layout.addWidget(self.filter_notice_label, 1)
+        clear_button = button(self.t('Clear filters'), self.clear_filters)
+        clear_button.setObjectName('clearFiltersButton')
+        clear_button.setToolTip(self.t('Clear filters'))
+        notice_layout.addWidget(clear_button)
+        self.filter_notice.setVisible(False)
+        stack.addWidget(self.filter_notice)
         sub = QHBoxLayout()
         self.heading = QLabel(self.t('My board'))
         self.heading.setObjectName('heading')
@@ -900,7 +920,22 @@ class MainWindow(QMainWindow):
         columns = QHBoxLayout(container)
         columns.setContentsMargins(2, 8, 8, 8)
         columns.setSpacing(14)
-        cards = self.store.search_cards(bid,self.search.text().strip(),self.priority.currentData())
+        search_term = self.search.text().strip()
+        priority_code = self.priority.currentData() or 'Alle'
+        active_search = bool(search_term)
+        active_priority = priority_code != 'Alle'
+        active = active_search or active_priority
+        cards = self.store.search_cards(bid, search_term, priority_code)
+        if active:
+            total = self.store.one(
+                'SELECT COUNT(*) AS n FROM cards c JOIN lanes l ON l.id=c.lane_id '
+                'WHERE l.board_id=? AND c.archived_at IS NULL', (bid,))['n']
+            self.filter_notice_label.setText(
+                f"⚠ {self.t('Filters active')}  ·  {len(cards)} / {total} {self.t('tasks')}")
+        self.filter_notice.setVisible(active)
+        highlight = 'border: 2px solid #e8ad50; background-color: #473217; color: #fff4dc;'
+        self.search.setStyleSheet(highlight if active_search else '')
+        self.priority.setStyleSheet(highlight if active_priority else '')
         lanes = self.store.rows('SELECT * FROM lanes WHERE board_id=? ORDER BY position,id',(bid,))
         for lane in lanes:
             columns.addWidget(DropColumn(self,lane,[card for card in cards if card['lane_id']==lane['id']]))

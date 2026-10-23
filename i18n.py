@@ -113,6 +113,11 @@ ROWS = [
 CODES = ('en', 'de', 'es', 'fr', 'ja', 'ko')
 TRANSLATIONS = {code: {row[0]: row[i] for row in ROWS} for i, code in enumerate(CODES)}
 
+# Additional languages are stored independently; the existing six-language rows remain stable.
+from i18n_extra import EXTRA_LANGUAGES, EXTRA_TRANSLATIONS
+LANGUAGES.update(EXTRA_LANGUAGES)
+TRANSLATIONS.update(EXTRA_TRANSLATIONS)
+
 def tr(language, key):
     return TRANSLATIONS.get(language, TRANSLATIONS['en']).get(key, key)
 

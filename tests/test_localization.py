@@ -8,12 +8,16 @@ from i18n import LANGUAGES, ROWS, TRANSLATIONS, tr, PRIORITIES
 
 class LocalizationTests(unittest.TestCase):
     def test_all_languages_and_translation_rows(self):
-        self.assertEqual(set(LANGUAGES), {'en','de','es','fr','ja','ko'})
+        self.assertEqual(set(LANGUAGES), {'en','de','es','fr','ja','ko','it','zh_CN','pt_BR','pl','ru','hi'})
         self.assertTrue(all(len(row) == 6 and all(row) for row in ROWS))
         self.assertEqual(len(TRANSLATIONS['ja']), len(ROWS))
         self.assertEqual(tr('ja', 'Save'), '保存')
         self.assertEqual(tr('de', 'Save'), 'Speichern')
         self.assertEqual(tr('bad', 'Save'), 'Save')
+        for language in ('it','zh_CN','pt_BR','pl','ru','hi'):
+            self.assertEqual(len(TRANSLATIONS[language]), len(ROWS) + 4)
+            self.assertNotEqual(tr(language, 'Save'), 'Save')
+            self.assertNotEqual(tr(language, 'Clear filters'), 'Clear filters')
     def test_language_setting_survives_restart_and_legacy_database(self):
         with tempfile.TemporaryDirectory() as d:
             store = Store(d)
