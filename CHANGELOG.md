@@ -1,9 +1,11 @@
 # Changelog
 
-## [1.0.0] – 2026-10-17
+## [1.0.0] – 2026-10-23
 
-- First public release candidate: packaging, release workflows, license, documentation, and repository hygiene.
-- Retains existing Kanban, localization, portability and appearance features from 0.9.
+- First stable Windows release, with an experimental Linux build.
+- 12 interface languages, clearer collapsed columns and visible active filters.
+- Includes RC2 fixes for scaling, drag previews, attachment Save/Cancel, cancelled new-task creation and imported appearance settings.
+- Portable Kanban functionality, workspace export/import, backups and integrity checks.
 - No workspace schema migration or user-data path change.
 
 ## [0.9.0]
