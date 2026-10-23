@@ -118,6 +118,22 @@ from i18n_extra import EXTRA_LANGUAGES, EXTRA_TRANSLATIONS
 LANGUAGES.update(EXTRA_LANGUAGES)
 TRANSLATIONS.update(EXTRA_TRANSLATIONS)
 
+# UI additions introduced after the original six-language translation table.
+# Stored priority codes and user-created text remain unchanged.
+_CORE_NEW_UI_ROWS = [
+    ('Filters active', 'Filters active', 'Filter aktiv', 'Filtros activos', 'Filtres actifs', 'フィルター適用中', '필터 적용 중'),
+    ('Clear filters', 'Clear filters', 'Filter zurücksetzen', 'Borrar filtros', 'Effacer les filtres', 'フィルターを解除', '필터 지우기'),
+    ('Expand column', 'Expand column', 'Spalte ausklappen', 'Expandir columna', 'Déplier la colonne', '列を展開', '열 펼치기'),
+    ('Collapse column', 'Collapse column', 'Spalte einklappen', 'Contraer columna', 'Replier la colonne', '列を折りたたむ', '열 접기'),
+]
+for _row in _CORE_NEW_UI_ROWS:
+    for _index, _code in enumerate(CODES, 1):
+        TRANSLATIONS[_code][_row[0]] = _row[_index]
+
+from i18n_ar import AR_TRANSLATIONS
+LANGUAGES['ar'] = 'العربية'
+TRANSLATIONS['ar'] = AR_TRANSLATIONS
+
 def tr(language, key):
     return TRANSLATIONS.get(language, TRANSLATIONS['en']).get(key, key)
 

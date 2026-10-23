@@ -150,17 +150,31 @@ class LaneDragHandle(QLabel):
             painter.end()
             drag.setPixmap(translucent)
             drag.setHotSpot(self.mapTo(self.column, self.start))
-        drag.exec(Qt.DropAction.MoveAction)
+        try:
+            drag.exec(Qt.DropAction.MoveAction)
+        finally:
+            # Also clear guides if the mouse is released outside the board.
+            for target in self.column.window.findChildren(DropColumn):
+                target.clear_lane_drop_side()
 
     def dragEnterEvent(self, event):
         if event.mimeData().hasFormat('application/x-kanyx-lane'):
+            x = self.mapTo(self.column, event.position().toPoint()).x()
+            self.column.set_lane_drop_side(event.mimeData(), x)
             event.acceptProposedAction()
 
     def dragMoveEvent(self, event):
         if event.mimeData().hasFormat('application/x-kanyx-lane'):
+            x = self.mapTo(self.column, event.position().toPoint()).x()
+            self.column.set_lane_drop_side(event.mimeData(), x)
             event.acceptProposedAction()
 
+    def dragLeaveEvent(self, event):
+        self.column.clear_lane_drop_side()
+        super().dragLeaveEvent(event)
+
     def dropEvent(self, event):
+        self.column.clear_lane_drop_side()
         self.column.perform_lane_drop(event, self.mapTo(self.column, event.position().toPoint()).x())
 
 
@@ -289,10 +303,19 @@ class CardScroll(QScrollArea):
             t = event.type()
             from PySide6.QtCore import QEvent
             if t in (QEvent.Type.DragEnter, QEvent.Type.DragMove):
-                if event.mimeData().hasFormat('application/x-kanyx-card') or event.mimeData().hasFormat('application/x-kanyx-lane'):
+                if event.mimeData().hasFormat('application/x-kanyx-lane'):
+                    x = self.viewport().mapTo(self.column, event.position().toPoint()).x()
+                    self.column.set_lane_drop_side(event.mimeData(), x)
                     event.acceptProposedAction()
                     return True
+                if event.mimeData().hasFormat('application/x-kanyx-card'):
+                    self.column.clear_lane_drop_side()
+                    event.acceptProposedAction()
+                    return True
+            if t == QEvent.Type.DragLeave:
+                self.column.clear_lane_drop_side()
             if t == QEvent.Type.Drop:
+                self.column.clear_lane_drop_side()
                 pos = self.viewport().mapTo(self.column, event.position().toPoint())
                 if event.mimeData().hasFormat('application/x-kanyx-card'):
                     self.column.perform_drop(event, pos.y())
@@ -308,6 +331,7 @@ class DropColumn(QFrame):
         super().__init__()
         self.window = window
         self.lane = lane
+        self._lane_drop_side = None  # None, 'before', 'after'
         self.setObjectName('lane')
         self.setAcceptDrops(True)
         self.setFixedWidth(58 if lane.get('collapsed') else 300)
@@ -385,13 +409,64 @@ class DropColumn(QFrame):
             self.window.store.delete_lane(self.lane['id'])
         self.window.refresh()
 
+    def set_lane_drop_side(self, mime, x):
+        """Preview the exact before/after position the drop handler will use."""
+        side = None
+        if mime.hasFormat('application/x-kanyx-lane'):
+            try:
+                moving_id = int(bytes(mime.data('application/x-kanyx-lane')).decode('ascii'))
+            except (ValueError, UnicodeDecodeError):
+                moving_id = None
+            if moving_id is not None and moving_id != self.lane['id']:
+                moving = self.window.store.one('SELECT board_id FROM lanes WHERE id=?', (moving_id,))
+                if moving and moving['board_id'] == self.lane['board_id']:
+                    side = 'after' if x >= self.width() / 2 else 'before'
+        if side != self._lane_drop_side:
+            self._lane_drop_side = side
+            self.update()
+
+    def clear_lane_drop_side(self):
+        if self._lane_drop_side is not None:
+            self._lane_drop_side = None
+            self.update()
+
+    def paintEvent(self, event):
+        super().paintEvent(event)
+        if self._lane_drop_side is None:
+            return
+        # Paint on the column's outer 12px margin so child widgets cannot
+        # obscure the line. A vivid stripe plus end caps shows the drop edge.
+        painter = QPainter(self)
+        painter.setPen(Qt.PenStyle.NoPen)
+        color = QColor('#b8daff')
+        x = 3 if self._lane_drop_side == 'before' else self.width() - 8
+        painter.fillRect(QRect(x, 12, 5, max(1, self.height() - 24)), color)
+        painter.fillRect(QRect(x - 3, 9, 11, 5), color)
+        painter.fillRect(QRect(x - 3, self.height() - 14, 11, 5), color)
+        painter.end()
+
     def dragEnterEvent(self, event):
-        if event.mimeData().hasFormat('application/x-kanyx-card') or event.mimeData().hasFormat('application/x-kanyx-lane'): event.acceptProposedAction()
+        if event.mimeData().hasFormat('application/x-kanyx-lane'):
+            self.set_lane_drop_side(event.mimeData(), event.position().x())
+            event.acceptProposedAction()
+        elif event.mimeData().hasFormat('application/x-kanyx-card'):
+            self.clear_lane_drop_side()
+            event.acceptProposedAction()
 
     def dragMoveEvent(self, event):
-        if event.mimeData().hasFormat('application/x-kanyx-card') or event.mimeData().hasFormat('application/x-kanyx-lane'): event.acceptProposedAction()
+        if event.mimeData().hasFormat('application/x-kanyx-lane'):
+            self.set_lane_drop_side(event.mimeData(), event.position().x())
+            event.acceptProposedAction()
+        elif event.mimeData().hasFormat('application/x-kanyx-card'):
+            self.clear_lane_drop_side()
+            event.acceptProposedAction()
+
+    def dragLeaveEvent(self, event):
+        self.clear_lane_drop_side()
+        super().dragLeaveEvent(event)
 
     def dropEvent(self, event):
+        self.clear_lane_drop_side()
         if event.mimeData().hasFormat('application/x-kanyx-lane'):
             self.perform_lane_drop(event, event.position().x())
         else:
@@ -412,7 +487,7 @@ class DropColumn(QFrame):
                 event.acceptProposedAction()
                 return
             target_index = ordered.index(self.lane['id'])
-            if x >= self.width() / 2:
+            if x >= self.width() / 2:  # same threshold as the preview guide
                 target_index += 1
             previous = next(i for i, x in enumerate(lanes) if x['id'] == moving_id)
             self.window.change_with_undo(lambda: self.window.store.move_lane(moving_id,target_index), lambda: self.window.store.move_lane(moving_id,previous))
@@ -755,6 +830,7 @@ class MainWindow(QMainWindow):
         self.search = QLineEdit()
         self.search.setMinimumWidth(120)
         self.search.setPlaceholderText(self.t('Search tasks, descriptions and tags…'))
+        self.search.setLayoutDirection(Qt.LayoutDirection.RightToLeft if self.language == 'ar' else Qt.LayoutDirection.LeftToRight)
         self.search.textChanged.connect(self.refresh)
         filters.addWidget(self.search,1)
         self.priority = QComboBox()
@@ -774,6 +850,9 @@ class MainWindow(QMainWindow):
         notice_layout.setContentsMargins(12, 5, 8, 5)
         self.filter_notice_label = QLabel()
         self.filter_notice_label.setObjectName('activeFilterText')
+        self.filter_notice_label.setAlignment(
+            (Qt.AlignmentFlag.AlignRight if self.language == 'ar' else Qt.AlignmentFlag.AlignLeft)
+            | Qt.AlignmentFlag.AlignVCenter)
         notice_layout.addWidget(self.filter_notice_label, 1)
         clear_button = button(self.t('Clear filters'), self.clear_filters)
         clear_button.setObjectName('clearFiltersButton')

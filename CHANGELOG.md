@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+- Add Arabic as the thirteenth interface language (initial translation).
+- Translate active-filter and clear-filter controls for the original six languages.
+- Show a live left/right insertion guide when reordering columns.
+
 ## [1.0.0] – 2026-10-23
 
 - First stable Windows release, with an experimental Linux build.

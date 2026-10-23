@@ -8,12 +8,22 @@ from i18n import LANGUAGES, ROWS, TRANSLATIONS, tr, PRIORITIES
 
 class LocalizationTests(unittest.TestCase):
     def test_all_languages_and_translation_rows(self):
-        self.assertEqual(set(LANGUAGES), {'en','de','es','fr','ja','ko','it','zh_CN','pt_BR','pl','ru','hi'})
+        self.assertEqual(set(LANGUAGES), {'en','de','es','fr','ja','ko','it','zh_CN','pt_BR','pl','ru','hi','ar'})
         self.assertTrue(all(len(row) == 6 and all(row) for row in ROWS))
-        self.assertEqual(len(TRANSLATIONS['ja']), len(ROWS))
+        self.assertEqual(len(TRANSLATIONS['ja']), len(ROWS) + 4)
         self.assertEqual(tr('ja', 'Save'), '保存')
         self.assertEqual(tr('de', 'Save'), 'Speichern')
         self.assertEqual(tr('bad', 'Save'), 'Save')
+        from i18n_ar import AR_TRANSLATIONS
+        self.assertEqual(len(AR_TRANSLATIONS), len(ROWS) + 4)
+        self.assertEqual(set(AR_TRANSLATIONS), {r[0] for r in ROWS} | {
+            'Filters active', 'Clear filters', 'Expand column', 'Collapse column'})
+        for key in ('Filters active', 'Clear filters', 'Expand column', 'Collapse column'):
+            for code in LANGUAGES:
+                self.assertTrue(tr(code, key))
+                if code != 'en':
+                    self.assertNotEqual(tr(code, key), key)
+        self.assertEqual(tr('ar', 'Save'), 'حفظ')
         for language in ('it','zh_CN','pt_BR','pl','ru','hi'):
             self.assertEqual(len(TRANSLATIONS[language]), len(ROWS) + 4)
             self.assertNotEqual(tr(language, 'Save'), 'Save')
