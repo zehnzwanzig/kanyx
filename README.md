@@ -111,4 +111,4 @@ See [CHANGELOG.md](CHANGELOG.md), [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.
 
 Kanyx's own source code is under the [MIT License](LICENSE). **PySide6/Qt and other dependencies are separately licensed.** See [third-party notices](THIRD_PARTY_NOTICES.md), [Qt source distribution notes](docs/THIRD_PARTY_SOURCES.md), and the [release compliance checklist](docs/RELEASE_COMPLIANCE.md).
 
-The pre-release provides separately downloadable Qt/PySide6 source archives and bundled license notices. The LGPL corresponding-source, third-party attribution and modified-library requirements require further independent verification; a pre-release is not exempt from redistribution obligations. Distribute the **complete** portable binary folders, not just the executable.
+The stable release provides separately downloadable Qt/PySide6 source archives and bundled license notices. LGPL corresponding-source, third-party attribution, and modified-library requirements still require independent verification. Distribute the **complete** portable binary folders, not just the executable.
