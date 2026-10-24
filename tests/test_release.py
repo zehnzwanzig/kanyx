@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 class ReleaseTests(unittest.TestCase):
     def test_version(self):
-        self.assertEqual(__version__, '1.0.1')
+        self.assertEqual(__version__, '1.0.2')
 
     def test_release_files(self):
         for path in ['LICENSE', 'CHANGELOG.md', 'SECURITY.md',

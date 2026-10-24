@@ -134,6 +134,86 @@ from i18n_ar import AR_TRANSLATIONS
 LANGUAGES['ar'] = 'العربية'
 TRANSLATIONS['ar'] = AR_TRANSLATIONS
 
+
+# Attachment lifecycle messages, translated for every supported UI language.
+_ATTACHMENT_MESSAGES = {'en': {'This task has attachments. What should happen to them?': 'This task has attachments. What '
+                                                                  'should happen to them?',
+        'Delete attachments': 'Delete attachments',
+        'Keep attachments': 'Keep attachments',
+        'Attachment is missing or unsafe.': 'Attachment is missing or unsafe.',
+        'Unable to open attachment.': 'Unable to open attachment.'},
+ 'de': {'This task has attachments. What should happen to them?': 'Diese Karte enthält Anhänge. Was soll '
+                                                                  'mit ihnen geschehen?',
+        'Delete attachments': 'Anhänge löschen',
+        'Keep attachments': 'Anhänge behalten',
+        'Attachment is missing or unsafe.': 'Anhang fehlt oder ist unsicher.',
+        'Unable to open attachment.': 'Anhang konnte nicht geöffnet werden.'},
+ 'es': {'This task has attachments. What should happen to them?': 'Esta tarjeta tiene archivos adjuntos. '
+                                                                  '¿Qué deseas hacer con ellos?',
+        'Delete attachments': 'Eliminar adjuntos',
+        'Keep attachments': 'Conservar adjuntos',
+        'Attachment is missing or unsafe.': 'Falta el adjunto o no es seguro.',
+        'Unable to open attachment.': 'No se pudo abrir el adjunto.'},
+ 'fr': {'This task has attachments. What should happen to them?': 'Cette carte contient des pièces '
+                                                                  'jointes. Que faire de ces fichiers ?',
+        'Delete attachments': 'Supprimer les pièces jointes',
+        'Keep attachments': 'Conserver les pièces jointes',
+        'Attachment is missing or unsafe.': 'Pièce jointe manquante ou non sûre.',
+        'Unable to open attachment.': 'Impossible d’ouvrir la pièce jointe.'},
+ 'ja': {'This task has attachments. What should happen to them?': 'このカードには添付ファイルがあります。どうしますか？',
+        'Delete attachments': '添付ファイルを削除',
+        'Keep attachments': '添付ファイルを残す',
+        'Attachment is missing or unsafe.': '添付ファイルが見つからないか、安全ではありません。',
+        'Unable to open attachment.': '添付ファイルを開けません。'},
+ 'ko': {'This task has attachments. What should happen to them?': '이 카드에 첨부 파일이 있습니다. 어떻게 처리하시겠습니까?',
+        'Delete attachments': '첨부 파일 삭제',
+        'Keep attachments': '첨부 파일 유지',
+        'Attachment is missing or unsafe.': '첨부 파일이 없거나 안전하지 않습니다.',
+        'Unable to open attachment.': '첨부 파일을 열 수 없습니다.'},
+ 'it': {'This task has attachments. What should happen to them?': 'Questa scheda contiene allegati. Cosa '
+                                                                  'vuoi farne?',
+        'Delete attachments': 'Elimina allegati',
+        'Keep attachments': 'Conserva allegati',
+        'Attachment is missing or unsafe.': 'Allegato mancante o non sicuro.',
+        'Unable to open attachment.': 'Impossibile aprire l’allegato.'},
+ 'zh_CN': {'This task has attachments. What should happen to them?': '此卡片包含附件。要如何处理？',
+           'Delete attachments': '删除附件',
+           'Keep attachments': '保留附件',
+           'Attachment is missing or unsafe.': '附件缺失或不安全。',
+           'Unable to open attachment.': '无法打开附件。'},
+ 'pt_BR': {'This task has attachments. What should happen to them?': 'Este cartão tem anexos. O que '
+                                                                     'deseja fazer com eles?',
+           'Delete attachments': 'Excluir anexos',
+           'Keep attachments': 'Manter anexos',
+           'Attachment is missing or unsafe.': 'Anexo ausente ou inseguro.',
+           'Unable to open attachment.': 'Não foi possível abrir o anexo.'},
+ 'pl': {'This task has attachments. What should happen to them?': 'Ta karta ma załączniki. Co chcesz z '
+                                                                  'nimi zrobić?',
+        'Delete attachments': 'Usuń załączniki',
+        'Keep attachments': 'Zachowaj załączniki',
+        'Attachment is missing or unsafe.': 'Załącznik nie istnieje lub jest niebezpieczny.',
+        'Unable to open attachment.': 'Nie można otworzyć załącznika.'},
+ 'ru': {'This task has attachments. What should happen to them?': 'У этой карточки есть вложения. Что с '
+                                                                  'ними сделать?',
+        'Delete attachments': 'Удалить вложения',
+        'Keep attachments': 'Сохранить вложения',
+        'Attachment is missing or unsafe.': 'Вложение отсутствует или небезопасно.',
+        'Unable to open attachment.': 'Не удалось открыть вложение.'},
+ 'hi': {'This task has attachments. What should happen to them?': 'इस कार्ड में संलग्न फ़ाइलें हैं। इनके '
+                                                                  'साथ क्या करना है?',
+        'Delete attachments': 'संलग्न फ़ाइलें हटाएँ',
+        'Keep attachments': 'संलग्न फ़ाइलें रखें',
+        'Attachment is missing or unsafe.': 'संलग्न फ़ाइल नहीं मिली या असुरक्षित है।',
+        'Unable to open attachment.': 'संलग्न फ़ाइल खोली नहीं जा सकी।'},
+ 'ar': {'This task has attachments. What should happen to them?': 'تحتوي هذه البطاقة على مرفقات. ماذا '
+                                                                  'تريد أن تفعل بها؟',
+        'Delete attachments': 'حذف المرفقات',
+        'Keep attachments': 'الاحتفاظ بالمرفقات',
+        'Attachment is missing or unsafe.': 'المرفق مفقود أو غير آمن.',
+        'Unable to open attachment.': 'تعذر فتح المرفق.'}}
+for _lang, _messages in _ATTACHMENT_MESSAGES.items():
+    TRANSLATIONS[_lang].update(_messages)
+
 def tr(language, key):
     return TRANSLATIONS.get(language, TRANSLATIONS['en']).get(key, key)
 

@@ -18,6 +18,9 @@ class NewLocalizationTests(unittest.TestCase):
         expected = {row[0] for row in ROWS} | {
             'Filters active', 'Clear filters', 'Expand column', 'Collapse column'
         }
+        expected |= {'This task has attachments. What should happen to them?',
+                     'Delete attachments', 'Keep attachments',
+                     'Attachment is missing or unsafe.', 'Unable to open attachment.'}
         self.assertEqual(set(TRANSLATIONS['ar']), expected)
         for language in LANGUAGES:
             for key in ('Filters active', 'Clear filters', 'Expand column', 'Collapse column'):

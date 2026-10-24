@@ -1,4 +1,5 @@
 import sqlite3
+import os
 import sys
 import shutil
 import uuid
@@ -206,22 +207,25 @@ class Store:
     def add_card(self, lane_id, title):
         return self.execute('INSERT INTO cards(lane_id,title,position) VALUES(?,?,(SELECT COUNT(*) FROM cards WHERE lane_id=?))', (lane_id,title,lane_id))
 
+    def _apply_card_fields(self, cid, title, description, priority, due, tags, checklist, color=None):
+        self.con.execute('UPDATE cards SET title=?,description=?,priority=?,due=? WHERE id=?', (title,description,priority,due,cid))
+        if color is not None:
+            if color not in ('', '#4f98c8', '#6bb6a4', '#d7a15a', '#c97893', '#9a8dd2'):
+                raise ValueError('Invalid card accent')
+            self.con.execute('UPDATE cards SET color=? WHERE id=?', (color,cid))
+        self.con.execute('DELETE FROM card_tags WHERE card_id=?', (cid,))
+        for name in sorted({s.strip() for s in tags.split(',') if s.strip()}):
+            self.con.execute('INSERT OR IGNORE INTO tags(name) VALUES(?)', (name,))
+            tag_id = self.con.execute('SELECT id FROM tags WHERE name=? COLLATE NOCASE',(name,)).fetchone()[0]
+            self.con.execute('INSERT OR IGNORE INTO card_tags(card_id,tag_id) VALUES(?,?)', (cid,tag_id))
+        self.con.execute('DELETE FROM checklist WHERE card_id=?', (cid,))
+        for pos, (body, done) in enumerate(checklist):
+            if body.strip():
+                self.con.execute('INSERT INTO checklist(card_id,body,done,position) VALUES(?,?,?,?)', (cid,body.strip(),int(done),pos))
+
     def update_card(self, cid, title, description, priority, due, tags, checklist, color=None):
         with self.con:
-            self.con.execute('UPDATE cards SET title=?,description=?,priority=?,due=? WHERE id=?', (title,description,priority,due,cid))
-            if color is not None:
-                if color not in ('', '#4f98c8', '#6bb6a4', '#d7a15a', '#c97893', '#9a8dd2'):
-                    raise ValueError('Invalid card accent')
-                self.con.execute('UPDATE cards SET color=? WHERE id=?', (color,cid))
-            self.con.execute('DELETE FROM card_tags WHERE card_id=?', (cid,))
-            for name in sorted({s.strip() for s in tags.split(',') if s.strip()}):
-                self.con.execute('INSERT OR IGNORE INTO tags(name) VALUES(?)', (name,))
-                tag_id = self.con.execute('SELECT id FROM tags WHERE name=? COLLATE NOCASE',(name,)).fetchone()[0]
-                self.con.execute('INSERT INTO card_tags(card_id,tag_id) VALUES(?,?)', (cid,tag_id))
-            self.con.execute('DELETE FROM checklist WHERE card_id=?', (cid,))
-            for pos, (body, done) in enumerate(checklist):
-                if body.strip():
-                    self.con.execute('INSERT INTO checklist(card_id,body,done,position) VALUES(?,?,?,?)', (cid,body.strip(),int(done),pos))
+            self._apply_card_fields(cid, title, description, priority, due, tags, checklist, color)
 
     def card(self, cid):
         return self.one('SELECT * FROM cards WHERE id=?',(cid,))
@@ -235,23 +239,140 @@ class Store:
     def card_files(self, cid):
         return self.rows('SELECT * FROM files WHERE card_id=? ORDER BY id',(cid,))
 
+    def _attachment_path(self, stored_name):
+        """Return a safe path or None. Never follow forged DB paths or symlinks."""
+        if (not isinstance(stored_name, str) or not stored_name
+                or stored_name in ('.', '..') or '/' in stored_name
+                or '\\' in stored_name or '\x00' in stored_name):
+            return None
+        if self.attachments.is_symlink():
+            return None
+        path = self.attachments / stored_name
+        if path.is_symlink() or path.resolve(strict=False).parent != self.attachments.resolve():
+            return None
+        return path
+
+    def _stage_removals(self, rows):
+        """Move attachments aside so a failed SQL operation can restore them."""
+        moved = []
+        try:
+            for row in rows:
+                path = self._attachment_path(row['stored_name'])
+                # Bad database paths: forget the DB reference, NEVER touch any other file.
+                if path is None or not path.exists():
+                    continue
+                if not path.is_file():
+                    raise OSError('Attachment is not a regular file: ' + str(path))
+                trash = self.attachments / ('.kanyx-trash-' + uuid.uuid4().hex)
+                os.replace(path, trash)
+                moved.append((trash, path))
+        except Exception:
+            self._restore_removals(moved)
+            raise
+        return moved
+
+    @staticmethod
+    def _restore_removals(moved):
+        for trash, original in reversed(moved):
+            if trash.exists():
+                os.replace(trash, original)
+
+    @staticmethod
+    def _finish_removals(moved):
+        # Failure to clean a trash file must not undo a committed database edit.
+        for trash, _ in moved:
+            try:
+                trash.unlink(missing_ok=True)
+            except OSError:
+                pass
+
     def add_file(self, cid, path):
-        import uuid
         src = Path(path)
         unique = f'{uuid.uuid4().hex}{src.suffix.lower()}'
-        shutil.copy2(src, self.attachments / unique)
-        return self.execute('INSERT INTO files(card_id,original_name,stored_name) VALUES(?,?,?)',(cid,src.name,unique))
+        destination = self.attachments / unique
+        try:
+            shutil.copy2(src, destination)
+            return self.execute('INSERT INTO files(card_id,original_name,stored_name) VALUES(?,?,?)',
+                                (cid, src.name, unique))
+        except Exception:
+            destination.unlink(missing_ok=True)
+            raise
+
+    def save_card_with_files(self, cid, title, description, priority, due, tags,
+                             checklist, color=None, *, is_new=False, lane_id=None,
+                             added_paths=(), removed_ids=()):
+        """Commit the card and attachment references together, or leave all unchanged.
+
+        Copies are staged before SQL; removals are reversible until SQL commits.
+        This is a best-effort filesystem/SQLite transaction (not crash-atomic).
+        """
+        added = []
+        moved = []
+        try:
+            for source in added_paths:
+                src = Path(source)
+                unique = f'{uuid.uuid4().hex}{src.suffix.lower()}'
+                destination = self.attachments / unique
+                # Register BEFORE copy2: clean up even an interrupted partial copy.
+                added.append((src.name, unique, destination))
+                shutil.copy2(src, destination)
+
+            remove_ids = list(dict.fromkeys(removed_ids))
+            to_remove = []
+            if remove_ids:
+                if is_new:
+                    raise ValueError('Cannot remove attachments from an unsaved card')
+                for fid in remove_ids:
+                    row = self.one('SELECT id,card_id,stored_name FROM files WHERE id=?', (fid,))
+                    if row is None or row['card_id'] != cid:
+                        raise ValueError('Attachment does not belong to this card')
+                    to_remove.append(row)
+            moved = self._stage_removals(to_remove)
+            with self.con:
+                if is_new:
+                    if lane_id is None:
+                        raise ValueError('New task requires a target column')
+                    cid = self.con.execute(
+                        'INSERT INTO cards(lane_id,title,position) VALUES(?,?,(SELECT COUNT(*) FROM cards WHERE lane_id=?))',
+                        (lane_id, title, lane_id)).lastrowid
+                self._apply_card_fields(cid, title, description, priority, due, tags, checklist, color)
+                for original_name, unique, _ in added:
+                    self.con.execute('INSERT INTO files(card_id,original_name,stored_name) VALUES(?,?,?)',
+                                     (cid, original_name, unique))
+                for row in to_remove:
+                    self.con.execute('DELETE FROM files WHERE id=?', (row['id'],))
+        except Exception:
+            self._restore_removals(moved)
+            for _, _, path in added:
+                path.unlink(missing_ok=True)
+            raise
+        self._finish_removals(moved)
+        return cid
 
     def delete_file(self, fid):
-        item = self.one('SELECT stored_name FROM files WHERE id=?',(fid,))
-        if item:
-            self.execute('DELETE FROM files WHERE id=?',(fid,))
-            (self.attachments / item['stored_name']).unlink(missing_ok=True)
+        row = self.one('SELECT id,stored_name FROM files WHERE id=?', (fid,))
+        if row is None:
+            return
+        moved = self._stage_removals([row])
+        try:
+            with self.con:
+                self.con.execute('DELETE FROM files WHERE id=?', (fid,))
+        except Exception:
+            self._restore_removals(moved)
+            raise
+        self._finish_removals(moved)
 
-    def delete_card(self, cid):
-        for f in self.card_files(cid):
-            self.delete_file(f['id'])
-        self.execute('DELETE FROM cards WHERE id=?',(cid,))
+    def delete_card(self, cid, delete_attachments=True):
+        """When False: delete card + file DB references, keep files as orphans."""
+        files = self.card_files(cid)
+        moved = self._stage_removals(files) if delete_attachments else []
+        try:
+            with self.con:
+                self.con.execute('DELETE FROM cards WHERE id=?', (cid,))
+        except Exception:
+            self._restore_removals(moved)
+            raise
+        self._finish_removals(moved)
 
     def delete_lane(self, lid):
         for r in self.rows('SELECT id FROM cards WHERE lane_id=?',(lid,)):
@@ -280,9 +401,11 @@ class Store:
         clauses = ['l.board_id=?', 'c.archived_at IS NULL']
         args = [board_id]
         if term:
-            clauses.append('''(c.title LIKE ? OR c.description LIKE ? OR EXISTS
-            (SELECT 1 FROM card_tags ct JOIN tags t ON t.id=ct.tag_id WHERE ct.card_id=c.id AND t.name LIKE ?))''')
-            args.extend([f'%{term}%']*3)
+            clauses.append('''(c.title LIKE ? ESCAPE '!' OR c.description LIKE ? ESCAPE '!' OR EXISTS
+            (SELECT 1 FROM card_tags ct JOIN tags t ON t.id=ct.tag_id WHERE ct.card_id=c.id AND t.name LIKE ? ESCAPE '!'))''')
+            # Interpret search terms literally, not as SQL LIKE wildcards.
+            escaped = term.replace('!', '!!').replace('%', '!%').replace('_', '!_')
+            args.extend([f'%{escaped}%']*3)
         if priority != 'Alle':
             clauses.append('c.priority=?')
             args.append(priority)

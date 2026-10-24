@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## [1.0.2] – 2026-10-24
+
+- Harden attachment path validation against traversal and unsafe filesystem paths.
+- Make card saves transactional when attachments fail, preventing partial edits.
+- Display a warning when an attached file is missing instead of trying to open it.
+- Handle case-insensitive duplicate tags without a database constraint error.
+- Treat percent (%) and underscore (_) as literal characters in card searches.
+- Ask whether to delete or keep attachment files when deleting a card, with a cancel option; localized across 13 languages.
+- Add regression and robustness tests for these behaviors.
+- No workspace schema migration is required.
+
 ## [1.0.1] – 2026-10-23
 
 - Arabic added as the thirteenth interface language (initial translation).

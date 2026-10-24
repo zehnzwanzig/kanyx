@@ -687,34 +687,31 @@ class CardDialog(QDialog):
         if 'pending_index' in data:
             path = self.pending_added_paths[data['pending_index']]
         else:
-            path = self.store.attachments / data['stored']['stored_name']
-        QDesktopServices.openUrl(QUrl.fromLocalFile(str(path)))
+            path = self.store._attachment_path(data['stored']['stored_name'])
+        if path is None or not path.is_file():
+            QMessageBox.warning(self, self.window.t('File error'),
+                                self.window.t('Attachment is missing or unsafe.') + '\n' + item.text())
+            return
+        if not QDesktopServices.openUrl(QUrl.fromLocalFile(str(path))):
+            QMessageBox.warning(self, self.window.t('File error'),
+                                self.window.t('Unable to open attachment.') + '\n' + item.text())
 
     def save(self):
         title = self.title.text().strip()
         if not title:
-            QMessageBox.warning(self,self.window.t('Missing title'),self.window.t('Task needs a title.'))
+            QMessageBox.warning(self, self.window.t('Missing title'), self.window.t('Task needs a title.'))
             return
-        checks = [(self.checks.item(i).text(), self.checks.item(i).checkState() == Qt.CheckState.Checked) for i in range(self.checks.count())]
-        new_cid = None
-        added_ids = []
+        checks = [(self.checks.item(i).text(),
+                   self.checks.item(i).checkState() == Qt.CheckState.Checked)
+                  for i in range(self.checks.count())]
         try:
-            if self.is_new:
-                new_cid = self.store.add_card(self.lane_id, title)
-                self.cid = new_cid
-            self.store.update_card(self.cid, title, self.desc.toPlainText(), self.priority.currentData(),
+            self.cid = self.store.save_card_with_files(
+                self.cid, title, self.desc.toPlainText(), self.priority.currentData(),
                 self.due.date().toString('yyyy-MM-dd') if self.has_due.isChecked() else '',
-                self.tags.text(), checks, self.card_color.currentData())
-            for path in self.pending_added_paths:
-                added_ids.append(self.store.add_file(self.cid, path))
-            for file_id in self.pending_removed_ids:
-                self.store.delete_file(file_id)
+                self.tags.text(), checks, self.card_color.currentData(),
+                is_new=self.is_new, lane_id=self.lane_id,
+                added_paths=self.pending_added_paths, removed_ids=self.pending_removed_ids)
         except (OSError, ValueError, sqlite3.Error) as exc:
-            for file_id in added_ids:
-                self.store.delete_file(file_id)
-            if new_cid is not None:
-                self.store.delete_card(new_cid)
-                self.cid = None
             QMessageBox.warning(self, self.window.t('File error'), str(exc))
             return
         self.accept()
@@ -736,9 +733,32 @@ class CardDialog(QDialog):
         self.accept()
 
     def delete(self):
-        if QMessageBox.question(self,self.window.t('Delete'),self.window.t('Delete this task permanently?')) == QMessageBox.StandardButton.Yes:
-            self.store.delete_card(self.cid)
-            self.accept()
+        attachments = self.store.card_files(self.cid)
+        if attachments:
+            dialog = QMessageBox(self)
+            dialog.setWindowTitle(self.window.t('Delete'))
+            dialog.setText(self.window.t('Delete this task permanently?'))
+            dialog.setInformativeText(self.window.t('This task has attachments. What should happen to them?'))
+            delete_files = dialog.addButton(self.window.t('Delete attachments'), QMessageBox.ButtonRole.DestructiveRole)
+            keep_files = dialog.addButton(self.window.t('Keep attachments'), QMessageBox.ButtonRole.AcceptRole)
+            cancel = dialog.addButton(self.window.t('Cancel'), QMessageBox.ButtonRole.RejectRole)
+            dialog.setDefaultButton(cancel)
+            dialog.exec()
+            selected = dialog.clickedButton()
+            if selected not in (delete_files, keep_files):
+                return
+            should_delete = selected is delete_files
+        else:
+            if QMessageBox.question(self, self.window.t('Delete'),
+                                    self.window.t('Delete this task permanently?')) != QMessageBox.StandardButton.Yes:
+                return
+            should_delete = True
+        try:
+            self.store.delete_card(self.cid, delete_attachments=should_delete)
+        except (OSError, ValueError, sqlite3.Error) as exc:
+            QMessageBox.warning(self, self.window.t('File error'), str(exc))
+            return
+        self.accept()
 
 
 class MainWindow(QMainWindow):
