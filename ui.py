@@ -845,16 +845,8 @@ class MainWindow(QMainWindow):
         top.addWidget(button(self.t('Templates'), self.new_from_template))
         top.addWidget(button('⋯ ' + self.t('Manage board'), self.manage_board))
         top.addWidget(button('▣ ' + self.t('Archive'), self.show_archive))
-        undo_button = button('↶', self.undo)
-        undo_button.setFixedSize(44, 42)
-        undo_button.setToolTip('Undo (Ctrl+Z)')
-        undo_button.setAccessibleName('Undo')
-        top.addWidget(undo_button)
-        redo_button = button('↷', self.redo)
-        redo_button.setFixedSize(44, 42)
-        redo_button.setToolTip('Redo (Ctrl+Y)')
-        redo_button.setAccessibleName('Redo')
-        top.addWidget(redo_button)
+        top.addWidget(button('↶', self.undo))
+        top.addWidget(button('↷', self.redo))
         top.addWidget(button('▦ ' + feature_t(self.language,'Calendar'),self.show_calendar))
         self.swimlanes_toggle = button(feature_t(self.language,'Swimlanes'),self.toggle_swimlanes)
         top.addWidget(self.swimlanes_toggle)
@@ -1125,7 +1117,18 @@ class MainWindow(QMainWindow):
             overall.setSpacing(12)
             for sl in swimlanes(self.store,bid):
                 row_widget=QFrame()
-                row_widget.setStyleSheet('QFrame {border:1px solid rgba(100,112,136,105);border-radius:9px;background:rgba(25,29,39,125);}')
+                row_widget.setObjectName('swimlaneRow')
+                # Apply the frame only to the swimlane container. A generic
+                # QFrame rule would also restyle columns and task cards.
+                # Keep the container transparent so the existing wallpaper,
+                # column opacity and individual card styling remain unchanged.
+                row_widget.setStyleSheet(
+                    'QFrame#swimlaneRow {'
+                    'border: 1px solid rgba(100,112,136,105);'
+                    'border-radius: 9px;'
+                    'background: transparent;'
+                    '}'
+                )
                 section=QVBoxLayout(row_widget)
                 header=QHBoxLayout()
                 header.addWidget(QLabel(f"{sl['title']} · {sum(c.get('swimlane_id')==sl['id'] for c in cards)}"))
