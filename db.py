@@ -5,6 +5,7 @@ import shutil
 import uuid
 from pathlib import Path
 from datetime import datetime
+from kanyx_feature_core import (migrate_swimlanes, default_swimlane, swimlanes, add_swimlane, rename_swimlane, set_swimlane_collapsed, move_swimlane, delete_swimlane, assign_swimlane, move_card_to_swimlane, due_cards, set_due)
 
 
 def root_path():
@@ -70,6 +71,7 @@ class Store:
             finally:
                 destination.close()
             self.execute("ALTER TABLE cards ADD COLUMN color TEXT NOT NULL DEFAULT ''")
+        migrate_swimlanes(self)
         if not self.rows('SELECT id FROM boards LIMIT 1'):
             board = self.add_board('My board')
             for title in ('To Do', 'In Progress', 'Done'):
@@ -153,6 +155,11 @@ class Store:
             copied = self.con.execute('''INSERT INTO cards(lane_id,title,description,priority,due,position,created,archived_at,color)
                 VALUES(?,?,?,?,?,(SELECT COUNT(*) FROM cards WHERE lane_id=?),CURRENT_TIMESTAMP,NULL,?)''',
                 (lane_id, original['title']+' (Copy)',original['description'],original['priority'],original['due'],lane_id,original.get('color',''))).lastrowid
+            original_board = self.one('SELECT board_id FROM lanes WHERE id=?', (original['lane_id'],))['board_id']
+            target_board = self.one('SELECT board_id FROM lanes WHERE id=?', (lane_id,))['board_id']
+            destination_swim = (original.get('swimlane_id') if original_board == target_board
+                                else default_swimlane(self, target_board))
+            self.con.execute('UPDATE cards SET swimlane_id=? WHERE id=?', (destination_swim, copied))
             self.con.execute('INSERT INTO card_tags(card_id,tag_id) SELECT ?,tag_id FROM card_tags WHERE card_id=?',(copied,cid))
             self.con.execute('INSERT INTO checklist(card_id,body,done,position) SELECT ?,body,done,position FROM checklist WHERE card_id=?',(copied,cid))
             # Give the duplicate its own attachment files, so deletion remains independent.
@@ -169,11 +176,25 @@ class Store:
         board = self.one('SELECT * FROM boards WHERE id=?',(bid,))
         if not board: raise ValueError('Board not found')
         new_bid = self.add_board(board['title']+' (Copy)')
+        old_swim = swimlanes(self, bid)
+        new_default = default_swimlane(self,new_bid)
+        swim_map = {}
+        for sl in old_swim:
+            new_sid = new_default if sl['is_default'] else add_swimlane(self,new_bid,sl['title'])
+            if sl['is_default']:
+                rename_swimlane(self,new_sid,sl['title'])
+            set_swimlane_collapsed(self,new_sid,sl['collapsed'])
+            swim_map[sl['id']] = new_sid
+        if self.setting(f'swimlane_enabled_{bid}','0')=='1':
+            self.set_setting(f'swimlane_enabled_{new_bid}','1')
         for lane in self.rows('SELECT * FROM lanes WHERE board_id=? ORDER BY position,id',(bid,)):
             new_lane = self.add_lane(new_bid,lane['title'])
             self.set_lane_collapsed(new_lane, lane['collapsed'])
             for card in self.rows('SELECT id FROM cards WHERE lane_id=? AND archived_at IS NULL ORDER BY position,id',(lane['id'],)):
-                self.duplicate_card(card['id'],new_lane)
+                copy_id = self.duplicate_card(card['id'],new_lane)
+                source_card = self.card(card['id'])
+                target_swim = swim_map.get(source_card['swimlane_id'],new_default)
+                assign_swimlane(self,copy_id,target_swim)
         return new_bid
 
     def create_board_from_template(self, title, template='simple'):
@@ -199,13 +220,21 @@ class Store:
         self.execute('UPDATE boards SET title=? WHERE id=?',(title,bid))
 
     def add_board(self, title):
-        return self.execute('INSERT INTO boards(title,position) VALUES(?,(SELECT COUNT(*) FROM boards))', (title,))
+        bid = self.execute('INSERT INTO boards(title,position) VALUES(?,(SELECT COUNT(*) FROM boards))', (title,))
+        default_swimlane(self, bid)
+        return bid
 
     def add_lane(self, board_id, title):
         return self.execute('INSERT INTO lanes(board_id,title,position) VALUES(?,?,(SELECT COUNT(*) FROM lanes WHERE board_id=?))', (board_id,title,board_id))
 
     def add_card(self, lane_id, title):
-        return self.execute('INSERT INTO cards(lane_id,title,position) VALUES(?,?,(SELECT COUNT(*) FROM cards WHERE lane_id=?))', (lane_id,title,lane_id))
+        with self.con:
+            cid = self.con.execute('INSERT INTO cards(lane_id,title,position) VALUES(?,?,(SELECT COUNT(*) FROM cards WHERE lane_id=?))', (lane_id,title,lane_id)).lastrowid
+            row = self.one('SELECT board_id FROM lanes WHERE id=?', (lane_id,))
+            if row:
+                sid = default_swimlane(self, row['board_id'])
+                self.con.execute('UPDATE cards SET swimlane_id=? WHERE id=?', (sid,cid))
+            return cid
 
     def _apply_card_fields(self, cid, title, description, priority, due, tags, checklist, color=None):
         self.con.execute('UPDATE cards SET title=?,description=?,priority=?,due=? WHERE id=?', (title,description,priority,due,cid))
@@ -300,7 +329,7 @@ class Store:
 
     def save_card_with_files(self, cid, title, description, priority, due, tags,
                              checklist, color=None, *, is_new=False, lane_id=None,
-                             added_paths=(), removed_ids=()):
+                             added_paths=(), removed_ids=(), swimlane_id=None):
         """Commit the card and attachment references together, or leave all unchanged.
 
         Copies are staged before SQL; removals are reversible until SQL commits.
@@ -336,6 +365,13 @@ class Store:
                         'INSERT INTO cards(lane_id,title,position) VALUES(?,?,(SELECT COUNT(*) FROM cards WHERE lane_id=?))',
                         (lane_id, title, lane_id)).lastrowid
                 self._apply_card_fields(cid, title, description, priority, due, tags, checklist, color)
+                if swimlane_id is not None or is_new:
+                    row = self.one('SELECT board_id FROM lanes WHERE id=(SELECT lane_id FROM cards WHERE id=?)', (cid,))
+                    if row is None: raise ValueError('Unknown task')
+                    desired = swimlane_id if swimlane_id is not None else default_swimlane(self,row['board_id'])
+                    match = self.one('SELECT id FROM swimlanes WHERE id=? AND board_id=?',(desired,row['board_id']))
+                    if match is None: raise ValueError('Swimlane is not part of the task board')
+                    self.con.execute('UPDATE cards SET swimlane_id=? WHERE id=?',(desired,cid))
                 for original_name, unique, _ in added:
                     self.con.execute('INSERT INTO files(card_id,original_name,stored_name) VALUES(?,?,?)',
                                      (cid, original_name, unique))

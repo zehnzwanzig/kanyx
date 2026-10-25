@@ -13,6 +13,10 @@ from PySide6.QtCore import QDate
 from i18n import LANGUAGES, PRIORITIES, tr
 from version import __version__
 from portability import export_workspace, stage_import, swap_in_workspace
+from kanyx_feature_core import (migrate_swimlanes, swimlanes, default_swimlane, add_swimlane,
+                                move_card_to_swimlane, due_cards)
+from kanyx_feature_ui import (t as feature_t, UpdateChecker, DueDateCalendarDialog,
+                              manage_swimlane)
 
 STYLE = '''
 * {font-family: 'Segoe UI', 'Inter', 'Arial'; font-size: 13px; color: #e7eaf0;}
@@ -327,10 +331,11 @@ class CardScroll(QScrollArea):
 
 
 class DropColumn(QFrame):
-    def __init__(self, window, lane, cards):
+    def __init__(self, window, lane, cards, swimlane_id=None):
         super().__init__()
         self.window = window
         self.lane = lane
+        self.swimlane_id = swimlane_id
         self._lane_drop_side = None  # None, 'before', 'after'
         self.setObjectName('lane')
         self.setAcceptDrops(True)
@@ -390,7 +395,7 @@ class DropColumn(QFrame):
         title = ask(self, self.window.t('New task'), self.window.t('Task title:'))
         if title:
             # No database insert before the editor is accepted.
-            CardDialog(self.window, None, is_new=True, lane_id=self.lane['id'], initial_title=title).exec()
+            CardDialog(self.window, None, is_new=True, lane_id=self.lane['id'], initial_title=title, swimlane_id=self.swimlane_id).exec()
             self.window.refresh()
 
     def manage(self):
@@ -502,15 +507,24 @@ class DropColumn(QFrame):
         positions = [tile.mapTo(self, QPoint(0, tile.height()//2)).y() for tile in self.card_widgets if tile.cid != cid]
         index = sum(y > pos for pos in positions)
         current = self.window.store.card(cid)
+        if current is None: return
         previous_lane, previous_position = current['lane_id'], current['position']
-        self.window.change_with_undo(lambda: self.window.store.move_card(cid,self.lane['id'],index),
-                                     lambda: self.window.store.move_card(cid,previous_lane,previous_position))
+        if self.swimlane_id is None:
+            self.window.change_with_undo(lambda: self.window.store.move_card(cid,self.lane['id'],index),
+                                         lambda: self.window.store.move_card(cid,previous_lane,previous_position))
+        else:
+            previous_swim = current.get('swimlane_id') or default_swimlane(self.window.store,self.lane['board_id'])
+            previous_row_index = self.window.store.one('''SELECT COUNT(*) AS n FROM cards
+                WHERE lane_id=? AND swimlane_id=? AND (position<? OR (position=? AND id<?))''',
+                (previous_lane,previous_swim,previous_position,previous_position,cid))['n']
+            self.window.change_with_undo(lambda: move_card_to_swimlane(self.window.store,cid,self.lane['id'],index,self.swimlane_id),
+                                         lambda: move_card_to_swimlane(self.window.store,cid,previous_lane,previous_row_index,previous_swim))
         event.acceptProposedAction()
         self.window.refresh()
 
 
 class CardDialog(QDialog):
-    def __init__(self, window, cid, is_new=False, lane_id=None, initial_title=''):
+    def __init__(self, window, cid, is_new=False, lane_id=None, initial_title='', swimlane_id=None):
         super().__init__(window)
         self.window = window
         self.store = window.store
@@ -547,6 +561,18 @@ class CardDialog(QDialog):
         self.title = QLineEdit(card['title'])
         root.addWidget(QLabel(window.t('Title')))
         root.addWidget(self.title)
+        self.swimlane_select = None
+        current_lane = lane_id if is_new else card['lane_id']
+        board_row = self.store.one('SELECT board_id FROM lanes WHERE id=?',(current_lane,))
+        if board_row and self.store.setting(f"swimlane_enabled_{board_row['board_id']}",'0')=='1':
+            self.swimlane_select = QComboBox()
+            for sl in swimlanes(self.store,board_row['board_id']):
+                self.swimlane_select.addItem(sl['title'],sl['id'])
+            chosen = (swimlane_id if is_new and swimlane_id is not None
+                      else card.get('swimlane_id') if not is_new else default_swimlane(self.store,board_row['board_id']))
+            self.swimlane_select.setCurrentIndex(max(0,self.swimlane_select.findData(chosen)))
+            root.addWidget(QLabel(feature_t(window.language,'Swimlanes')))
+            root.addWidget(self.swimlane_select)
         root.addWidget(QLabel(window.t('Description')))
         # QTextEdit(text) parses HTML automatically; preserve the source verbatim.
         self.desc = QTextEdit()
@@ -710,7 +736,8 @@ class CardDialog(QDialog):
                 self.due.date().toString('yyyy-MM-dd') if self.has_due.isChecked() else '',
                 self.tags.text(), checks, self.card_color.currentData(),
                 is_new=self.is_new, lane_id=self.lane_id,
-                added_paths=self.pending_added_paths, removed_ids=self.pending_removed_ids)
+                added_paths=self.pending_added_paths, removed_ids=self.pending_removed_ids,
+                swimlane_id=self.swimlane_select.currentData() if self.swimlane_select is not None else None)
         except (OSError, ValueError, sqlite3.Error) as exc:
             QMessageBox.warning(self, self.window.t('File error'), str(exc))
             return
@@ -781,6 +808,10 @@ class MainWindow(QMainWindow):
         self.future = []
         self.build_interface()
         self.apply_visual_settings()
+        self.update_checker = UpdateChecker(self,__version__)
+        if self.store.setting('update_check_on_start','0') == '1':
+            from PySide6.QtCore import QTimer
+            QTimer.singleShot(200,self.update_checker.check)
         QShortcut(QKeySequence('Ctrl+Z'),self,activated=self.undo)
         QShortcut(QKeySequence('Ctrl+Shift+Z'),self,activated=self.redo)
         QShortcut(QKeySequence('Ctrl+Y'),self,activated=self.redo)
@@ -814,8 +845,20 @@ class MainWindow(QMainWindow):
         top.addWidget(button(self.t('Templates'), self.new_from_template))
         top.addWidget(button('⋯ ' + self.t('Manage board'), self.manage_board))
         top.addWidget(button('▣ ' + self.t('Archive'), self.show_archive))
-        top.addWidget(button('↶', self.undo))
-        top.addWidget(button('↷', self.redo))
+        undo_button = button('↶', self.undo)
+        undo_button.setFixedSize(44, 42)
+        undo_button.setToolTip('Undo (Ctrl+Z)')
+        undo_button.setAccessibleName('Undo')
+        top.addWidget(undo_button)
+        redo_button = button('↷', self.redo)
+        redo_button.setFixedSize(44, 42)
+        redo_button.setToolTip('Redo (Ctrl+Y)')
+        redo_button.setAccessibleName('Redo')
+        top.addWidget(redo_button)
+        top.addWidget(button('▦ ' + feature_t(self.language,'Calendar'),self.show_calendar))
+        self.swimlanes_toggle = button(feature_t(self.language,'Swimlanes'),self.toggle_swimlanes)
+        top.addWidget(self.swimlanes_toggle)
+        top.addWidget(button('＋ ' + feature_t(self.language,'Add swimlane'),self.add_swimlane_ui))
         top.addWidget(button('▧ ' + self.t('Wallpaper'), self.manage_wallpaper))
         top.addWidget(button('⚙ ' + self.t('Appearance'), self.open_appearance))
         data_btn = QPushButton('⋯ ' + self.t('Workspace'))
@@ -825,6 +868,12 @@ class MainWindow(QMainWindow):
         data_menu.addSeparator()
         data_menu.addAction(self.t('Create database backup'), self.create_backup)
         data_menu.addAction(self.t('Check data integrity'), self.check_integrity)
+        data_menu.addSeparator()
+        data_menu.addAction(feature_t(self.language,'Check for updates…'), self.manual_update_check)
+        auto_update = data_menu.addAction(feature_t(self.language,'Check for updates automatically'))
+        auto_update.setCheckable(True)
+        auto_update.setChecked(self.store.setting('update_check_on_start','0') == '1')
+        auto_update.toggled.connect(lambda checked:self.store.set_setting('update_check_on_start','1' if checked else '0'))
         data_btn.setMenu(data_menu)
         top.addWidget(data_btn)
         toolbar_content.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
@@ -945,6 +994,8 @@ class MainWindow(QMainWindow):
             staged = stage_import(path, self.store.root)
             previous = swap_in_workspace(self.store, staged)
             staged = None
+            migrate_swimlanes(self.store)  # old .kanyx exports may lack new tables
+
             self.history.clear()
             self.future.clear()
             self.build_interface()
@@ -1007,6 +1058,37 @@ class MainWindow(QMainWindow):
     def board_id(self):
         return self.board_select.currentData()
 
+    def show_calendar(self):
+        DueDateCalendarDialog(self).exec()
+
+    def toggle_swimlanes(self):
+        bid=self.board_id()
+        if bid is None:return
+        key=f'swimlane_enabled_{bid}'
+        enabled=self.store.setting(key,'0')=='1'
+        self.store.set_setting(key,'0' if enabled else '1')
+        self.refresh()
+
+    def set_swimlane_ui_collapsed(self,sid,state):
+        from kanyx_feature_core import set_swimlane_collapsed
+        set_swimlane_collapsed(self.store,sid,state)
+        self.refresh()
+
+    def add_swimlane_ui(self):
+        bid=self.board_id()
+        if bid is None:return
+        title=ask(self,feature_t(self.language,'Add swimlane'),feature_t(self.language,'Swimlane name'))
+        if not title:return
+        try:
+            add_swimlane(self.store,bid,title)
+            self.store.set_setting(f'swimlane_enabled_{bid}','1')
+            self.refresh()
+        except ValueError as exc:
+            QMessageBox.warning(self,'Kanyx',str(exc))
+
+    def manual_update_check(self):
+        self.update_checker.check(manual=True)
+
     def refresh(self, *_):
         bid = self.board_id()
         if bid is None: return
@@ -1016,9 +1098,8 @@ class MainWindow(QMainWindow):
         container = QWidget()
         container.setObjectName('boardSurface')
         container.setStyleSheet('QWidget#boardSurface { background: transparent; }')
-        columns = QHBoxLayout(container)
-        columns.setContentsMargins(2, 8, 8, 8)
-        columns.setSpacing(14)
+        # Columns are placed below, optionally grouped into horizontal swimlane rows.
+
         search_term = self.search.text().strip()
         priority_code = self.priority.currentData() or 'Alle'
         active_search = bool(search_term)
@@ -1036,9 +1117,41 @@ class MainWindow(QMainWindow):
         self.search.setStyleSheet(highlight if active_search else '')
         self.priority.setStyleSheet(highlight if active_priority else '')
         lanes = self.store.rows('SELECT * FROM lanes WHERE board_id=? ORDER BY position,id',(bid,))
-        for lane in lanes:
-            columns.addWidget(DropColumn(self,lane,[card for card in cards if card['lane_id']==lane['id']]))
-        columns.addStretch()
+        enabled = self.store.setting(f'swimlane_enabled_{bid}','0')=='1'
+        self.swimlanes_toggle.setText(feature_t(self.language,'Hide swimlanes') if enabled else feature_t(self.language,'Show swimlanes'))
+        if enabled:
+            overall=QVBoxLayout(container)
+            overall.setContentsMargins(2, 7, 8, 7)
+            overall.setSpacing(12)
+            for sl in swimlanes(self.store,bid):
+                row_widget=QFrame()
+                row_widget.setStyleSheet('QFrame {border:1px solid rgba(100,112,136,105);border-radius:9px;background:rgba(25,29,39,125);}')
+                section=QVBoxLayout(row_widget)
+                header=QHBoxLayout()
+                header.addWidget(QLabel(f"{sl['title']} · {sum(c.get('swimlane_id')==sl['id'] for c in cards)}"))
+                header.addStretch()
+                action=button('⋯',lambda _,sid=sl['id']:manage_swimlane(self,sid))
+                action.setToolTip(feature_t(self.language,'Manage swimlane'))
+                header.addWidget(action)
+                toggle=button('▸' if sl['collapsed'] else '▾',lambda _,sid=sl['id'],state=sl['collapsed']:self.set_swimlane_ui_collapsed(sid,not state))
+                header.addWidget(toggle)
+                section.addLayout(header)
+                if not sl['collapsed']:
+                    row=QHBoxLayout()
+                    row.setSpacing(14)
+                    for lane in lanes:
+                        row.addWidget(DropColumn(self,lane,[c for c in cards if c['lane_id']==lane['id'] and c.get('swimlane_id')==sl['id']],swimlane_id=sl['id']))
+                    row.addStretch()
+                    section.addLayout(row)
+                overall.addWidget(row_widget)
+            overall.addStretch()
+        else:
+            columns=QHBoxLayout(container)
+            columns.setContentsMargins(2,8,8,8)
+            columns.setSpacing(14)
+            for lane in lanes:
+                columns.addWidget(DropColumn(self,lane,[card for card in cards if card['lane_id']==lane['id']]))
+            columns.addStretch()
         self.scroll.setWidget(container)
         status = f"{len(cards)} {self.t('tasks')} · {len(lanes)} {self.t('columns')} · {self.t('Offline')} · {self.t('Data')}: {self.store.dbfile}"
         self.status.setText(status)
