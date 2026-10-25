@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## [1.1.0] – 2026-10-25
+
+- Added optional horizontal Swimlanes to Kanban boards with customizable names, ordering and card drag-and-drop between rows.
+- Existing workspaces are migrated automatically; existing cards remain in their boards and are assigned to a default swimlane.
+- Added a Due-Date Calendar with month/week views, board filtering and drag-and-drop date changes.
+- Added an opt-in GitHub update checker (disabled by default) and manual update checks; downloads are not installed automatically.
+- Restored compact Undo/Redo controls and aligned Swimlane backgrounds with the existing Column opacity setting (Swimlane opacity = 50% of Column opacity).
+- Added regression tests for new features, migrations, calendar and UI styling.
+- Windows x64 release; Linux x64 remains experimental.
+
 ## [1.0.2] – 2026-10-24
 
 - Harden attachment path validation against traversal and unsafe filesystem paths.
