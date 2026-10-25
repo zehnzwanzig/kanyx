@@ -23,6 +23,8 @@ STYLE = '''
 QMainWindow, QWidget#root, QDialog {background: #171a21;}
 /* 88 % opacity: wallpaper remains subtly visible through the columns. */
 QFrame#lane {background-color: rgba(34, 38, 48, __LANE_ALPHA__); border: 1px solid rgba(75, 84, 101, 190); border-radius: 12px;}
+/* Swimlanes use 50% of the configured column OPACITY; only the row background is tinted. */
+QFrame#swimlaneRow {background-color: rgba(25, 29, 39, __SWIMLANE_ALPHA__); border: 1px solid rgba(100, 112, 136, 105); border-radius: 9px;}
 /* Prevent the scroll area and its inner content from hiding the wallpaper. */
 QScrollArea#cardScroll, QScrollArea#cardScroll > QWidget > QWidget {background: transparent; border: none;}
 QPushButton#markdownToggle:checked {background: #5369ad; border: 1px solid #9aadf1; color: #ffffff; font-weight: 700;}
@@ -59,6 +61,7 @@ def themed_style(opacity=88, scale=100):
     opacity = max(45, min(100, int(opacity)))
     scale = max(80, min(140, int(scale)))
     css = STYLE.replace('__LANE_ALPHA__', str(round(255 * opacity / 100)))
+    css = css.replace('__SWIMLANE_ALPHA__', str(round(255 * opacity / 200)))
     # Scale all Qt pixel font sizes rather than overriding individual widgets.
     css = re.sub(r'font-size: (\d+)px', lambda m: 'font-size: %dpx' % round(int(m.group(1)) * scale / 100), css)
     return css
@@ -1118,17 +1121,8 @@ class MainWindow(QMainWindow):
             for sl in swimlanes(self.store,bid):
                 row_widget=QFrame()
                 row_widget.setObjectName('swimlaneRow')
-                # Apply the frame only to the swimlane container. A generic
-                # QFrame rule would also restyle columns and task cards.
-                # Keep the container transparent so the existing wallpaper,
-                # column opacity and individual card styling remain unchanged.
-                row_widget.setStyleSheet(
-                    'QFrame#swimlaneRow {'
-                    'border: 1px solid rgba(100,112,136,105);'
-                    'border-radius: 9px;'
-                    'background: transparent;'
-                    '}'
-                )
+                # The global, scoped QFrame#swimlaneRow rule in STYLE follows
+                # the live column-opacity setting; inner columns keep their look.
                 section=QVBoxLayout(row_widget)
                 header=QHBoxLayout()
                 header.addWidget(QLabel(f"{sl['title']} · {sum(c.get('swimlane_id')==sl['id'] for c in cards)}"))

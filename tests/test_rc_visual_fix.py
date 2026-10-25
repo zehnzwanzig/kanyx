@@ -1,6 +1,9 @@
-"""Regression checks for Kanyx Swimlane RC visual behavior.
+"""Regression checks for Kanyx RC toolbar and swimlane presentation.
 
 Run with: py -m unittest discover -s tests -p test_rc_visual_fix.py -v
+
+The swimlane tint is defined in the application stylesheet because it must
+follow the Appearance slider, not in the individual swimlane frame stylesheet.
 """
 import os
 import sys
@@ -56,15 +59,24 @@ class SwimlaneVisualRegressionTests(unittest.TestCase):
 
         frames = self.window.findChildren(QFrame, 'swimlaneRow')
         self.assertTrue(frames, 'Visible swimlane frames should have an object name')
-        for frame in frames:
-            css = frame.styleSheet()
-            self.assertIn('QFrame#swimlaneRow', css)
-            self.assertIn('background: transparent;', css)
-            self.assertNotIn('QFrame {', css)
 
+        # The newer appearance patch keeps this selector in the global theme,
+        # where opacity can be updated during Appearance's live preview.
+        css = self.app.styleSheet()
+        self.assertIn('QFrame#swimlaneRow', css)
+        percent = ui.visual_setting(self.store, 'column_opacity')
+        expected_alpha = round(255 * percent / 200)
+        self.assertIn(
+            f'QFrame#swimlaneRow {{background-color: rgba(25, 29, 39, {expected_alpha});',
+            css,
+        )
+        self.assertNotIn('__SWIMLANE_ALPHA__', css)
+
+        # Individual rows must not have a locally scoped QFrame stylesheet;
+        # such a rule could cascade to columns or cards inside the row.
+        self.assertTrue(all(frame.styleSheet() == '' for frame in frames))
         columns = self.window.findChildren(ui.DropColumn)
         self.assertTrue(columns, 'Swimlane mode must still display columns')
-        # Columns use the original app theme, not an inherited local QFrame rule.
         self.assertTrue(all(column.styleSheet() == '' for column in columns))
 
     def test_classic_board_still_has_original_columns(self):
