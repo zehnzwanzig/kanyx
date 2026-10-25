@@ -1,12 +1,12 @@
-# Kanyx 1.0.2
+# Kanyx 1.1.0
 
 **A minimalist, portable, offline-first Kanban board for Windows and Linux.**
 
 Built with **Python, PySide6 (Qt 6) and SQLite**. No accounts, cloud service or network connection required. Designed for a single workspace on a USB stick.
 
-> **Latest stable release: [v1.0.2](https://github.com/zehnzwanzig/kanyx/releases/tag/v1.0.2).** Windows x64 is available; the Linux x64 build is **experimental and has not been GUI-tested on a target Linux machine**.
+> **Latest stable release: [v1.1.0](https://github.com/zehnzwanzig/kanyx/releases/tag/v1.1.0).** Windows x64 is available; the Linux x64 build is **experimental and has not been GUI-tested on a target Linux machine**.
 >
-> [Download Kanyx](https://github.com/zehnzwanzig/kanyx/releases/tag/v1.0.2) · [Project website](https://zehnzwanzig.github.io/kanyx/) · [Report a bug](https://github.com/zehnzwanzig/kanyx/issues/new?template=bug_report.yml) · [Browse issues](https://github.com/zehnzwanzig/kanyx/issues) · [Keyboard Shortcuts](docs/KEYBOARD_SHORTCUTS.md)
+> [Download Kanyx](https://github.com/zehnzwanzig/kanyx/releases/tag/v1.1.0) · [Project website](https://zehnzwanzig.github.io/kanyx/) · [Report a bug](https://github.com/zehnzwanzig/kanyx/issues/new?template=bug_report.yml) · [Browse issues](https://github.com/zehnzwanzig/kanyx/issues) · [Keyboard Shortcuts](docs/KEYBOARD_SHORTCUTS.md)
 
 <p align="center">
   <img src="docs/images/kanyx-screenshot.png" alt="Kanyx in dark mode with three Kanban columns, customizable wallpaper and a compact toolbar" width="1000">
@@ -15,9 +15,9 @@ Built with **Python, PySide6 (Qt 6) and SQLite**. No accounts, cloud service or 
   <sub>Dark mode, translucent columns and customizable wallpapers.</sub>
 </p>
 
-## What's new in 1.0.2
+## What's new in 1.1.0
 
-Version 1.0.2 focuses on robustness: safer attachment handling, all-or-nothing card saves, clearer warnings for missing files, literal search for special characters, safer handling of duplicate tags, and a choice to delete or keep attachments when deleting a card. [Release notes](https://github.com/zehnzwanzig/kanyx/releases/tag/v1.0.2).
+Version 1.1.0 adds optional horizontal Swimlanes for Kanban boards, a Due-Date Calendar with month/week views, an opt-in GitHub update checker, and visual refinements including a linked Swimlane/Column opacity setting. Existing boards are migrated automatically. [Release notes](https://github.com/zehnzwanzig/kanyx/releases/tag/v1.1.0).
 
 ## Features
 
@@ -31,7 +31,7 @@ Version 1.0.2 focuses on robustness: safer attachment handling, all-or-nothing c
 
 ## Download and run — Windows x64
 
-1. Open [GitHub Releases](https://github.com/zehnzwanzig/kanyx/releases/tag/v1.0.2) and download **`Kanyx-v1.0.2-windows-x64.zip`** from **Assets**.
+1. Open [GitHub Releases](https://github.com/zehnzwanzig/kanyx/releases/tag/v1.1.0) and download **`Kanyx-v1.1.0-windows-x64.zip`** from **Assets**.
 2. Extract the **entire archive** to a writable folder or USB stick.
 3. Open the extracted `Kanyx/` directory and run `Kanyx.exe`.
 
@@ -43,7 +43,7 @@ Version 1.0.2 focuses on robustness: safer attachment handling, all-or-nothing c
 
 The experimental Linux release has not yet been GUI-tested on a real target machine. It may require extra desktop libraries, including `libxcb-shape.so.0`.
 
-1. Download **`Kanyx-v1.0.2-linux-x64-experimental.zip`** from [Assets](https://github.com/zehnzwanzig/kanyx/releases/tag/v1.0.2).
+1. Download **`Kanyx-v1.1.0-linux-x64-experimental.zip`** from [Assets](https://github.com/zehnzwanzig/kanyx/releases/tag/v1.1.0).
 2. Extract the entire archive, open the `Kanyx-linux/` directory, and run:
 
 ```bash
@@ -96,7 +96,7 @@ The older `scripts/build_windows.bat` and `scripts/build_linux.sh` create single
 python -m unittest discover -s tests -v
 ```
 
-CI runs unit tests on Windows and Linux. Tagged builds and manually dispatched builds upload candidate directories as GitHub Actions artifacts; **GitHub Releases are published separately**. The current stable release is [v1.0.2](https://github.com/zehnzwanzig/kanyx/releases/tag/v1.0.2). The first stable release was [v1.0.0](https://github.com/zehnzwanzig/kanyx/releases/tag/v1.0.0). Earlier pre-releases are still available under [GitHub Releases](https://github.com/zehnzwanzig/kanyx/releases).
+CI runs unit tests on Windows and Linux. Tagged builds and manually dispatched builds upload candidate directories as GitHub Actions artifacts; **GitHub Releases are published separately**. The current stable release is [v1.1.0](https://github.com/zehnzwanzig/kanyx/releases/tag/v1.1.0). The first stable release was [v1.0.0](https://github.com/zehnzwanzig/kanyx/releases/tag/v1.0.0). Earlier pre-releases are still available under [GitHub Releases](https://github.com/zehnzwanzig/kanyx/releases).
 
 See [CHANGELOG.md](CHANGELOG.md), [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), and [previous version documentation](docs/HISTORY_AND_FEATURES.md).
 
