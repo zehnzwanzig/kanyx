@@ -4,7 +4,7 @@
 
 Built with **Python, PySide6 (Qt 6) and SQLite**. No accounts, cloud service or network connection required. Designed for a single workspace on a USB stick.
 
-> **Latest stable release: [v1.1.0](https://github.com/zehnzwanzig/kanyx/releases/tag/v1.1.0).** Windows x64 is available; the Linux x64 build is **experimental and has not been GUI-tested on a target Linux machine**.
+> **Latest stable release: [v1.1.0](https://github.com/zehnzwanzig/kanyx/releases/tag/v1.1.0).** Portable builds are available for **Windows x64 and Linux x64**. The Linux build has been tested on a real Linux desktop; compatibility may vary by distribution.
 >
 > [Download Kanyx](https://github.com/zehnzwanzig/kanyx/releases/tag/v1.1.0) · [Project website](https://zehnzwanzig.github.io/kanyx/) · [Report a bug](https://github.com/zehnzwanzig/kanyx/issues/new?template=bug_report.yml) · [Browse issues](https://github.com/zehnzwanzig/kanyx/issues) · [Keyboard Shortcuts](docs/KEYBOARD_SHORTCUTS.md)
 
@@ -39,11 +39,11 @@ Version 1.1.0 adds optional horizontal Swimlanes for Kanban boards, a Due-Date C
 
 > Windows SmartScreen or corporate security policies may warn about unsigned executables. This repository does not provide code signing.
 
-## Download and run — Linux x64 (experimental)
+## Download and run — Linux x64
 
-The experimental Linux release has not yet been GUI-tested on a real target machine. It may require extra desktop libraries, including `libxcb-shape.so.0`.
+The Linux release has been tested on a real Linux desktop. Depending on your distribution, additional desktop libraries (such as `libxcb-shape.so.0`) may be required.
 
-1. Download **`Kanyx-v1.1.0-linux-x64-experimental.zip`** from [Assets](https://github.com/zehnzwanzig/kanyx/releases/tag/v1.1.0).
+1. Download the [Linux x64 ZIP](https://github.com/zehnzwanzig/kanyx/releases/download/v1.1.0/Kanyx-v1.1.0-linux-x64-experimental.zip) from the v1.1.0 release assets. The existing asset retains its original `-experimental` filename.
 2. Extract the entire archive, open the `Kanyx-linux/` directory, and run:
 
 ```bash
@@ -105,7 +105,7 @@ See [CHANGELOG.md](CHANGELOG.md), [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.
 - Single-user offline workspace; no cloud sync or multi-user collaboration.
 - Undo/redo does not cover every editor operation or permanent deletion.
 - Interface scaling adjusts text; not all controls scale proportionally.
-- Linux builds depend on the target desktop and libraries; real-world GUI testing is still required.
+- Linux builds depend on the target distribution, desktop libraries and glibc version; compatibility with every distribution is not guaranteed.
 
 ## License and redistribution
 
